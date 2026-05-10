@@ -7,6 +7,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, process.cwd(), '');
   const root = __dirname;
+  const outDir = path.resolve(process.cwd(), 'dist');
   return {
     root,
     publicDir: path.join(root, '../public'),
@@ -53,7 +54,8 @@ export default defineConfig(({mode}) => {
       },
     },
     build: {
-      outDir: path.join(root, '../dist'),
+      outDir: path.resolve(process.cwd(), 'dist'),
+      emptyOutDir: true,
     },
   };
 });
