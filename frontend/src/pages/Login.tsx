@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'motion/react';
 import { Mail, Lock, ArrowRight, Loader2, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { apiFetch } from '../lib/api';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -45,7 +46,7 @@ const Login: React.FC = () => {
     setError('');
 
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await apiFetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -71,7 +72,7 @@ const Login: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/auth/forgot-password', {
+      const res = await apiFetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: resetEmail })
@@ -95,7 +96,7 @@ const Login: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/auth/reset-password', {
+      const res = await apiFetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: resetEmail, otp: resetCode, newPassword })

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'motion/react';
 import { User, Mail, Phone, Wallet, Edit2, Check, X, Loader2 } from 'lucide-react';
+import { apiFetch } from '../lib/api';
 
 const Profile: React.FC = () => {
   const { user, setUser } = useAuth();
@@ -19,7 +20,7 @@ const Profile: React.FC = () => {
     setSuccess(null);
 
     try {
-      const response = await fetch('/api/member/update-profile', {
+      const response = await apiFetch('/api/member/update-profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

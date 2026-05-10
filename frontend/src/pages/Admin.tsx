@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Plus, 
-  Package, 
-  Users, 
-  History, 
-  TrendingUp, 
-  Loader2, 
-  Trash2, 
-  CheckCircle2, 
-  Edit3, 
-  Image as ImageIcon, 
+import {
+  Plus,
+  Package,
+  Users,
+  History,
+  TrendingUp,
+  Loader2,
+  Trash2,
+  CheckCircle2,
+  Edit3,
+  Image as ImageIcon,
   X,
   Bell,
   Search,
@@ -25,6 +25,7 @@ import {
   Square,
   CheckSquare
 } from 'lucide-react';
+import { apiFetch } from '../lib/api';
 
 const Admin: React.FC = () => {
   const { getToken } = useAuth();
@@ -52,23 +53,23 @@ const Admin: React.FC = () => {
       const headers = { Authorization: `Bearer ${token}` };
 
       if (activeTab === 'products') {
-        const res = await fetch('/api/products', { headers });
+         const res = await apiFetch('/api/products', { headers });
         const data = await res.json();
         setProducts(data);
       } else if (activeTab === 'members') {
-        const res = await fetch('/api/admin/members', { headers });
+         const res = await apiFetch('/api/admin/members', { headers });
         const data = await res.json();
         setMembers(data);
       } else if (activeTab === 'stk') {
-        const res = await fetch('/api/admin/transactions', { headers });
+         const res = await apiFetch('/api/admin/transactions', { headers });
         const data = await res.json();
         setTransactions(data.filter((t: any) => t.mpesa_checkout_id));
       } else if (activeTab === 'reminders') {
-        const res = await fetch('/api/admin/reminders/unpaid', { headers });
+         const res = await apiFetch('/api/admin/reminders/unpaid', { headers });
         const data = await res.json();
         setUnpaidInfo(data);
       } else if (activeTab === 'whatsapp') {
-        const res = await fetch('/api/admin/whatsapp-status', { headers });
+         const res = await apiFetch('/api/admin/whatsapp-status', { headers });
         const data = await res.json();
         setWhatsappStatus(data);
       }
@@ -94,7 +95,7 @@ const Admin: React.FC = () => {
     e.preventDefault();
     try {
       const token = await getToken();
-      const res = await fetch('/api/admin/products', {
+      const res = await apiFetch('/api/admin/products', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -121,7 +122,7 @@ const Admin: React.FC = () => {
     
     try {
       const token = await getToken();
-      const res = await fetch('/api/admin/products/bulk', {
+      const res = await apiFetch('/api/admin/products/bulk', {
         method: 'DELETE',
         headers: { 
           'Content-Type': 'application/json',
@@ -148,7 +149,7 @@ const Admin: React.FC = () => {
     try {
       const token = await getToken();
       const { _id, id, ...data } = editingProduct;
-      const res = await fetch(`/api/admin/products/${_id || id}`, {
+      const res = await apiFetch(`/api/admin/products/${_id || id}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -173,7 +174,7 @@ const Admin: React.FC = () => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
     try {
       const token = await getToken();
-      const res = await fetch(`/api/admin/products/${id}`, {
+      const res = await apiFetch(`/api/admin/products/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -193,7 +194,7 @@ const Admin: React.FC = () => {
     if (!window.confirm('Are you sure you want to process cycle payouts? This will deduct funds and notify winners.')) return;
     try {
       const token = await getToken();
-      const res = await fetch('/api/admin/process-cycle-payout', {
+      const res = await apiFetch('/api/admin/process-cycle-payout', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -218,7 +219,7 @@ const Admin: React.FC = () => {
     setSendingReminders(true);
     try {
       const token = await getToken();
-      const res = await fetch('/api/admin/reminders/send', {
+      const res = await apiFetch('/api/admin/reminders/send', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -241,7 +242,7 @@ const Admin: React.FC = () => {
 
     try {
       const token = await getToken();
-      const res = await fetch('/api/admin/update-balance', {
+      const res = await apiFetch('/api/admin/update-balance', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -267,7 +268,7 @@ const Admin: React.FC = () => {
 
     try {
       const token = await getToken();
-      const res = await fetch('/api/admin/trigger-stk', {
+      const res = await apiFetch('/api/admin/trigger-stk', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -297,7 +298,7 @@ const Admin: React.FC = () => {
 
     try {
       const token = await getToken();
-      const res = await fetch('/api/admin/upload', {
+      const res = await apiFetch('/api/admin/upload', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData

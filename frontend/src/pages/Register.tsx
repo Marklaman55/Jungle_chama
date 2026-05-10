@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'motion/react';
 import { User, Mail, Lock, Phone, ArrowRight, Loader2, Gift, Zap, AlertCircle } from 'lucide-react';
+import { apiFetch } from '../lib/api';
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -54,7 +55,7 @@ const Register: React.FC = () => {
     setError('');
 
     try {
-      const res = await fetch('/api/auth/register', {
+      const res = await apiFetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -80,7 +81,7 @@ const Register: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/auth/verify-otp', {
+      const res = await apiFetch('/api/auth/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: formData.email, otp })

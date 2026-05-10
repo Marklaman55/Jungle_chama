@@ -6,10 +6,13 @@
   "scripts": {
     "dev": "tsx server.ts",
     "start": "NODE_ENV=production tsx server.ts",
-    "build": "vite build",
-    "preview": "vite preview",
-    "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "build": "vite build --config frontend/vite.config.ts",
+    "preview": "vite preview --config frontend/vite.config.ts",
+    "build:frontend": "vite build --config frontend/vite.config.ts",
+    "preview:frontend": "vite preview --config frontend/vite.config.ts",
+    "lint": "tsc --noEmit --project frontend/tsconfig.json",
+    "lint:backend": "tsc --noEmit --project tsconfig.json",
+    "clean": "rm -rf dist"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",

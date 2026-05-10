@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShoppingBag, ArrowRight, Loader2, Package, CheckCircle2, AlertCircle } from 'lucide-react';
+import { apiFetch } from '../lib/api';
 
 const Products: React.FC = () => {
   const { user, getToken, updateBalance } = useAuth();
@@ -18,7 +19,7 @@ const Products: React.FC = () => {
       const headers = { Authorization: `Bearer ${token}` };
 
       // Fetch products
-      const productsRes = await fetch('/api/products', { headers });
+       const productsRes = await apiFetch('/api/products', { headers });
       const productsData = await productsRes.json();
       if (productsRes.ok) {
         setProducts(productsData);
@@ -26,7 +27,7 @@ const Products: React.FC = () => {
 
       // Fetch pending payout order
       if (user) {
-        const payoutRes = await fetch('/api/member/payout-orders/pending', { headers });
+         const payoutRes = await apiFetch('/api/member/payout-orders/pending', { headers });
         const payoutData = await payoutRes.json();
         if (payoutRes.ok && payoutData.length > 0) {
           setPayoutOrder(payoutData[0]);
@@ -50,7 +51,7 @@ const Products: React.FC = () => {
     setRedeeming(true);
     try {
       const token = await getToken();
-      const res = await fetch('/api/member/process-payout', {
+       const res = await apiFetch('/api/member/process-payout', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -80,7 +81,7 @@ const Products: React.FC = () => {
     setBuying(productId);
     try {
       const token = await getToken();
-      const res = await fetch('/api/admin/products/buy', {
+      const res = await apiFetch('/api/admin/products/buy', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

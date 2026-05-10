@@ -6,9 +6,12 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
+  const root = __dirname;
   return {
+    root,
+    publicDir: path.join(root, '../public'),
     plugins: [
-      react(), 
+      react(),
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
@@ -22,20 +25,9 @@ export default defineConfig(({mode}) => {
           display: 'standalone',
           icons: [
             {
-              src: 'pwa-192x192.png',
-              sizes: '192x192',
-              type: 'image/png'
-            },
-            {
-              src: 'pwa-512x512.png',
-              sizes: '512x512',
-              type: 'image/png'
-            },
-            {
-              src: 'pwa-512x512.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'any maskable'
+              src: 'vite.svg',
+              sizes: 'any',
+              type: 'image/svg+xml'
             }
           ]
         }
@@ -46,20 +38,22 @@ export default defineConfig(({mode}) => {
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(root, '.'),
       },
     },
     server: {
+      root,
       host: '0.0.0.0',
       port: 3000,
       strictPort: true,
-      allowedHosts: ['.ngrok-free.app', '.ngrok-free.dev', 'localhost'], // Allow ngrok domains
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
+      allowedHosts: ['.ngrok-free.app', '.ngrok-free.dev', 'localhost'],
       hmr: process.env.DISABLE_HMR !== 'true',
       watch: {
         ignored: ['**/.wwebjs_auth/**', '**/.wwebjs_cache/**'],
       },
+    },
+    build: {
+      outDir: path.join(root, '../dist'),
     },
   };
 });

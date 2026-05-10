@@ -2,16 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Wallet, 
-  Users, 
-  Calendar, 
-  ArrowUpRight, 
-  CheckCircle2, 
-  Clock, 
-  Trophy, 
-  Share2, 
-  Loader2, 
+import {
+  Wallet,
+  Users,
+  Calendar,
+  ArrowUpRight,
+  CheckCircle2,
+  Clock,
+  Trophy,
+  Share2,
+  Loader2,
   AlertCircle,
   ArrowRight,
   TrendingUp,
@@ -20,6 +20,7 @@ import {
   Zap
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { apiFetch } from '../lib/api';
 
 const Dashboard: React.FC = () => {
   const { user, getToken } = useAuth();
@@ -42,7 +43,7 @@ const Dashboard: React.FC = () => {
       const headers = { Authorization: `Bearer ${token}` };
 
       // Fetch member stats (includes totalSaved, referralCount, currentCycle)
-      const statsRes = await fetch('/api/member/stats', { headers });
+      const statsRes = await apiFetch('/api/member/stats', { headers });
       const statsContentType = statsRes.headers.get("content-type");
       if (statsRes.ok && statsContentType && statsContentType.includes("application/json")) {
         const statsData = await statsRes.json();
@@ -52,7 +53,7 @@ const Dashboard: React.FC = () => {
       }
 
       // Fetch payments
-      const paymentsRes = await fetch('/api/payments/my', { headers });
+      const paymentsRes = await apiFetch('/api/payments/my', { headers });
       const paymentsContentType = paymentsRes.headers.get("content-type");
       if (paymentsRes.ok && paymentsContentType && paymentsContentType.includes("application/json")) {
         const paymentsData = await paymentsRes.json();
@@ -104,7 +105,7 @@ const Dashboard: React.FC = () => {
     try {
       const token = await getToken();
       
-      const res = await fetch('/api/payment/mpesa/stk-push', {
+      const res = await apiFetch('/api/payment/mpesa/stk-push', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
