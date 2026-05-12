@@ -5,8 +5,8 @@ import {
     processB2BPayout, 
     handleB2BResult, 
     handleB2BTimeout 
-} from '../controllers/PaymentController';
-import { authMiddleware } from '../middleware/AuthMiddleware';
+} from '../controllers/PaymentController.js';
+import { authMiddleware } from '../middleware/AuthMiddleware.js';
 
 const router = express.Router();
 

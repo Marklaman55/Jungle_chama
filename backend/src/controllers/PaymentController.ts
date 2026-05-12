@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { initiateStkPush, initiateB2BPayout } from '../services/MpesaService';
-import User from '../models/User';
-import Transaction from '../models/Transaction';
-import SystemConfig from '../models/SystemConfig';
+import { initiateStkPush, initiateB2BPayout } from '../services/MpesaService.js';
+import User from '../models/User.js';
+import Transaction from '../models/Transaction.js';
+import SystemConfig from '../models/SystemConfig.js';
 import { v4 as uuidv4 } from 'uuid';
-import { sendWhatsAppMessage } from '../services/WhatsAppService';
+import { sendWhatsAppMessage } from '../services/WhatsAppService.js';
 
 export const triggerStkPush = async (req: Request, res: Response) => {
     const { phone, amount, userId } = req.body;

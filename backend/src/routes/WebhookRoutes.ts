@@ -1,5 +1,5 @@
 import express from 'express';
-import { handleTwilioWebhook, handleN8NWebhook } from '../controllers/WebhookController';
+import { handleTwilioWebhook, handleN8NWebhook } from '../controllers/WebhookController.js';
 
 const router = express.Router();
 

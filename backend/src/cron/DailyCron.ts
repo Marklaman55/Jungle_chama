@@ -1,8 +1,8 @@
 import cron from 'node-cron';
-import User from '../models/User';
-import Transaction from '../models/Transaction';
-import SystemConfig from '../models/SystemConfig';
-import { sendWhatsAppMessage } from '../services/WhatsAppService';
+import User from '../models/User.js';
+import Transaction from '../models/Transaction.js';
+import SystemConfig from '../models/SystemConfig.js';
+import { sendWhatsAppMessage } from '../services/WhatsAppService.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export const startCron = () => {

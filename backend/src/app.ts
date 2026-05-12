@@ -4,15 +4,15 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs';
 import multer from 'multer';
-import { connectDatabase } from './config/database';
-import { corsOptions } from './config/cors';
-import { errorMiddleware } from './middleware/ErrorMiddleware';
-import AuthRoutes from './routes/AuthRoutes';
-import AdminRoutes from './routes/AdminRoutes';
-import MemberRoutes from './routes/MemberRoutes';
-import PaymentRoutes from './routes/PaymentRoutes';
-import WebhookRoutes from './routes/WebhookRoutes';
-import { startCron } from './cron/DailyCron';
+import { connectDatabase } from './config/database.js';
+import { corsOptions } from './config/cors.js';
+import { errorMiddleware } from './middleware/ErrorMiddleware.js';
+import AuthRoutes from './routes/AuthRoutes.js';
+import AdminRoutes from './routes/AdminRoutes.js';
+import MemberRoutes from './routes/MemberRoutes.js';
+import PaymentRoutes from './routes/PaymentRoutes.js';
+import WebhookRoutes from './routes/WebhookRoutes.js';
+import { startCron } from './cron/DailyCron.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -56,7 +56,7 @@ const createApp = async () => {
 
   if (process.env.ENABLE_WHATSAPP !== 'false') {
     try {
-      const { initWhatsApp } = await import('./services/WhatsAppService');
+      const { initWhatsApp } = await import('./services/WhatsAppService.js');
       await initWhatsApp();
     } catch (err) {
       console.warn('WhatsApp service disabled or unavailable in this environment');

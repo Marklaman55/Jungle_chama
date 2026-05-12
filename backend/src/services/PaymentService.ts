@@ -1,5 +1,5 @@
-import User, { IUser } from '../models/User';
-import Transaction from '../models/Transaction';
+import User, { IUser } from '../models/User.js';
+import Transaction from '../models/Transaction.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export const applyPayment = async (user: IUser, amount: number) => {

@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import User from '../models/User';
-import OTP from '../models/OTP';
-import { sendOTPEmail, sendWelcomeEmail } from '../services/EmailService';
-import { sendWhatsAppMessage } from '../services/WhatsAppService';
+import User from '../models/User.js';
+import OTP from '../models/OTP.js';
+import { sendOTPEmail, sendWelcomeEmail } from '../services/EmailService.js';
+import { sendWhatsAppMessage } from '../services/WhatsAppService.js';
 import { v4 as uuidv4 } from 'uuid';
-import { config } from '../config/env';
+import { config } from '../config/env.js';
 
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
