@@ -138,6 +138,66 @@ export const sendDailyReminders = async (req: Request, res: Response) => {
   }
 };
 
+export const updateSystemConfig = async (req: Request, res: Response) => {
+  try {
+    let config = await SystemConfig.findOne();
+    if (!config) {
+      config = new SystemConfig(req.body);
+    } else {
+      Object.assign(config, req.body);
+    }
+    await config.save();
+    res.json(config);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update system config' });
+  }
+};
+
+export const approveManualDeposit = async (req: Request, res: Response) => {
+  const { transactionId, status } = req.body; // status: 'completed' | 'failed'
+  try {
+    const transaction = await Transaction.findById(transactionId);
+    if (!transaction || transaction.type !== 'manual_deposit') {
+      return res.status(404).json({ error: 'Transaction not found or not manual' });
+    }
+
+    if (transaction.status !== 'pending') {
+      return res.status(400).json({ error: 'Transaction already processed' });
+    }
+
+    transaction.status = status;
+    await transaction.save();
+
+    if (status === 'completed') {
+      const user = await User.findOne({ userId: transaction.userId });
+      if (user) {
+        user.balance += transaction.amount;
+        await user.save();
+        await sendWhatsAppMessage(user.phone, `Your manual deposit of ${transaction.amount} KES has been approved. New balance: ${user.balance} KES.`);
+      }
+    }
+
+    res.json({ message: `Transaction marked as ${status}`, transaction });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to process transaction' });
+  }
+};
+
+export const approveProduct = async (req: Request, res: Response) => {
+  const { productId, status } = req.body; // status: 'approved' | 'rejected'
+  try {
+    const product = await Product.findById(productId);
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+
+    product.status = status;
+    await product.save();
+
+    res.json({ message: `Product ${status}`, product });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to process product' });
+  }
+};
+
 export const getUsers = async (req: Request, res: Response) => {
   try {
     const users = await User.find();

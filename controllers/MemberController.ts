@@ -1,7 +1,54 @@
 import { Request, Response } from 'express';
 import User from '../models/User';
+import Product from '../models/Product';
 import Transaction from '../models/Transaction';
 import SystemConfig from '../models/SystemConfig';
+
+export const uploadProduct = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user.userId;
+    const productData = { 
+      ...req.body, 
+      creatorId: userId, 
+      isGlobal: false, 
+      status: 'pending' 
+    };
+    const product = new Product(productData);
+    await product.save();
+    res.status(201).json(product);
+  } catch (error) {
+    console.error('uploadProduct error:', error);
+    res.status(500).json({ error: 'Failed to upload product' });
+  }
+};
+
+export const submitManualDeposit = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user.userId;
+    const { amount, manualMessage } = req.body;
+
+    if (!amount || !manualMessage) {
+      return res.status(400).json({ error: 'Amount and transaction message are required' });
+    }
+
+    const transaction = new Transaction({
+      userId,
+      amount: Number(amount),
+      transactionId: `MAN-${Date.now()}`,
+      type: 'manual_deposit',
+      status: 'pending',
+      manualMessage,
+      date: new Date(),
+      description: 'Manual deposit request'
+    });
+
+    await transaction.save();
+    res.status(201).json(transaction);
+  } catch (error) {
+    console.error('submitManualDeposit error:', error);
+    res.status(500).json({ error: 'Failed to submit deposit request' });
+  }
+};
 
 export const getMemberStats = async (req: Request, res: Response) => {
   try {
@@ -76,13 +123,14 @@ export const processMemberPayout = async (req: Request, res: Response) => {
 export const updateProfile = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.userId;
-        const { name, phone } = req.body;
+        const { name, phone, avatar_url } = req.body;
         
         const user = await User.findOne({ userId });
         if (!user) return res.status(404).json({ error: 'User not found' });
 
         if (name) user.name = name;
         if (phone) user.phone = phone;
+        if (avatar_url) (user as any).avatar_url = avatar_url;
 
         await user.save();
         
@@ -95,7 +143,8 @@ export const updateProfile = async (req: Request, res: Response) => {
                 phone: user.phone,
                 userId: user.userId,
                 balance: user.balance,
-                role: user.role
+                role: user.role,
+                avatar_url: (user as any).avatar_url
             }
         });
     } catch (error) {

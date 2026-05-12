@@ -13,6 +13,7 @@ export interface IUser extends Document {
   role: 'member' | 'admin';
   isVerified: boolean;
   payout_number?: number;
+  avatar_url?: string;
   createdAt: Date;
 }
 
@@ -29,6 +30,7 @@ const UserSchema: Schema = new Schema({
   role: { type: String, enum: ['member', 'admin'], default: 'member' },
   isVerified: { type: Boolean, default: false },
   payout_number: { type: Number },
+  avatar_url: { type: String },
   createdAt: { type: Date, default: Date.now },
 }, {
   toJSON: {

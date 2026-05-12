@@ -6,18 +6,14 @@
   "scripts": {
     "dev": "tsx server.ts",
     "start": "NODE_ENV=production tsx server.ts",
-    "build": "vite build --config frontend/vite.config.ts",
-    "preview": "vite preview --config frontend/vite.config.ts",
-    "build:frontend": "vite build --config frontend/vite.config.ts",
-    "preview:frontend": "vite preview --config frontend/vite.config.ts",
-    "lint": "tsc --noEmit --project frontend/tsconfig.json",
-    "lint:backend": "tsc --noEmit --project tsconfig.json",
-    "clean": "rm -rf dist"
+    "build": "vite build",
+    "preview": "vite preview",
+    "clean": "rm -rf dist",
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
     "@tailwindcss/vite": "^4.1.14",
-    "@types/bcrypt": "^6.0.0",
     "@types/multer": "^2.1.0",
     "@types/nodemailer": "^8.0.0",
     "@types/qrcode": "^1.5.6",
@@ -53,6 +49,7 @@
     "whatsapp-web.js": "^1.34.6"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/better-sqlite3": "^7.6.13",
     "@types/cors": "^2.8.19",

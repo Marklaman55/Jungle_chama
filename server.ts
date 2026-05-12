@@ -46,12 +46,12 @@ const storage = multer.memoryStorage();
 
 const upload = multer({ 
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit for videos
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
+    if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
       cb(null, true);
     } else {
-      cb(new Error('Only images are allowed'));
+      cb(new Error('Only images and videos are allowed'));
     }
   }
 });
@@ -202,8 +202,8 @@ async function startServer() {
   app.use('/api/webhook', WebhookRoutes);
   app.use('/api/ai', AIRoutes);
   
-  // Image Upload Route - Uploads to Cloudinary
-  app.post('/api/admin/upload', authMiddleware, upload.single('image'), async (req, res) => {
+  // Image/Video Upload Route - Uploads to Cloudinary
+  app.post('/api/admin/upload', authMiddleware, upload.single('file'), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' });
@@ -211,19 +211,22 @@ async function startServer() {
       
       const streamUpload = (req: any) => {
         return new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream((error, result) => {
-            if (result) {
-              resolve(result);
-            } else {
-              reject(error);
+          const stream = cloudinary.uploader.upload_stream(
+            { resource_type: 'auto' },
+            (error, result) => {
+              if (result) {
+                resolve(result);
+              } else {
+                reject(error);
+              }
             }
-          });
+          );
           stream.end(req.file.buffer);
         });
       };
 
       const result: any = await streamUpload(req);
-      res.json({ url: result.secure_url });
+      res.json({ url: result.secure_url, resource_type: result.resource_type });
     } catch (error: any) {
       console.error('Cloudinary Upload Error:', error);
       res.status(500).json({ error: error.message || 'Failed to upload to Cloudinary' });
@@ -247,7 +250,6 @@ async function startServer() {
   // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
-      configFile: 'frontend/vite.config.ts',
       server: { middlewareMode: true },
       appType: 'spa',
     });

@@ -109,21 +109,23 @@ export const verifyOtp = async (req: Request, res: Response) => {
 };
 
 export const register = async (req: Request, res: Response) => {
-    const { name, email, password, phone } = req.body;
-    try {
-        const existingUser = await User.findOne({ email });
-        if (existingUser) return res.status(400).json({ error: 'Email already registered.' });
+  const { name, email, password, phone, termsAccepted } = req.body;
+  try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return res.status(400).json({ error: 'Email already registered.' });
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const userId = uuidv4().slice(0, 8).toUpperCase();
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const userId = uuidv4().slice(0, 8).toUpperCase();
 
-        const user = new User({
-            name,
-            email,
-            password: hashedPassword,
-            phone,
-            userId,
-        });
+    const user = new User({
+        name,
+        email,
+        password: hashedPassword,
+        phone,
+        userId,
+        termsAccepted: !!termsAccepted,
+        termsAcceptedAt: termsAccepted ? new Date() : undefined
+    });
 
         await user.save();
 

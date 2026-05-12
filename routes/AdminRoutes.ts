@@ -16,7 +16,10 @@ import {
   updateCycleOrder,
   processCyclePayout,
   updateMemberBalance,
-  triggerMemberStkPush
+  triggerMemberStkPush,
+  updateSystemConfig,
+  approveManualDeposit,
+  approveProduct
 } from '../controllers/AdminController';
 import { authMiddleware } from '../middleware/AuthMiddleware';
 import { roleMiddleware } from '../middleware/RoleMiddleware';
@@ -31,7 +34,8 @@ router.get('/users', getUsers);
 router.get('/members', getUsers); // Alias for frontend
 router.get('/transactions', getTransactions);
 router.get('/system', getSystemConfig);
-router.get('/whatsapp-status', getWhatsAppStatus);
+router.post('/system', updateSystemConfig);
+router.post('/whatsapp-status', getWhatsAppStatus);
 router.post('/trigger-payout', triggerPayout);
 router.post('/cycle-order', updateCycleOrder);
 router.post('/process-cycle-payout', processCyclePayout);
@@ -39,6 +43,7 @@ router.post('/process-cycle-payout', processCyclePayout);
 router.get('/products', getProducts);
 router.post('/products', createProduct);
 router.post('/products/buy', buyProduct);
+router.post('/products/approve', approveProduct);
 router.put('/products/:id', updateProduct);
 router.delete('/products/bulk', bulkDeleteProducts);
 router.delete('/products/:id', deleteProduct);
@@ -47,5 +52,6 @@ router.get('/reminders/unpaid', getUnpaidReminders);
 router.post('/reminders/send', sendDailyReminders);
 router.post('/update-balance', updateMemberBalance);
 router.post('/trigger-stk', triggerMemberStkPush);
+router.post('/transactions/approve-manual', approveManualDeposit);
 
 export default router;
