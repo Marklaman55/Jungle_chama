@@ -17,9 +17,9 @@ import {
   processCyclePayout,
   updateMemberBalance,
   triggerMemberStkPush
-} from '../controllers/AdminController';
-import { authMiddleware } from '../middleware/AuthMiddleware';
-import { roleMiddleware } from '../middleware/RoleMiddleware';
+} from '../controllers/AdminController.js';
+import { authMiddleware } from '../middleware/AuthMiddleware.js';
+import { roleMiddleware } from '../middleware/RoleMiddleware.js';
 
 const router = express.Router();
 

@@ -1,6 +1,6 @@
-import createApp from './app';
-import User from './models/User';
-import SystemConfig from './models/SystemConfig';
+import createApp from './app.js';
+import User from './models/User.js';
+import SystemConfig from './models/SystemConfig.js';
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 

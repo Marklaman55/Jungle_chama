@@ -4,8 +4,8 @@ import {
     getPendingPayoutOrders, 
     processMemberPayout,
     updateProfile 
-} from '../controllers/MemberController';
-import { authMiddleware } from '../middleware/AuthMiddleware';
+} from '../controllers/MemberController.js';
+import { authMiddleware } from '../middleware/AuthMiddleware.js';
 
 const router = express.Router();
 

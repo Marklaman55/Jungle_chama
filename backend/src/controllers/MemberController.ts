@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import User from '../models/User';
-import Transaction from '../models/Transaction';
-import SystemConfig from '../models/SystemConfig';
+import User from '../models/User.js';
+import Transaction from '../models/Transaction.js';
+import SystemConfig from '../models/SystemConfig.js';
 
 export const getMemberStats = async (req: Request, res: Response) => {
   try {

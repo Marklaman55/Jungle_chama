@@ -1,6 +1,6 @@
 import axios from 'axios';
 import dotenv from 'dotenv';
-import { config } from '../config/env';
+import { config } from '../config/env.js';
 
 dotenv.config();
 

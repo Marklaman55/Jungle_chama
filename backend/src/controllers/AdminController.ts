@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
-import User from '../models/User';
-import Transaction from '../models/Transaction';
-import SystemConfig from '../models/SystemConfig';
-import { sendWhatsAppMessage, getWhatsAppQR } from '../services/WhatsAppService';
-import { initiateStkPush, initiateB2BPayout } from '../services/MpesaService';
+import User from '../models/User.js';
+import Transaction from '../models/Transaction.js';
+import SystemConfig from '../models/SystemConfig.js';
+import { sendWhatsAppMessage, getWhatsAppQR } from '../services/WhatsAppService.js';
+import { initiateStkPush, initiateB2BPayout } from '../services/MpesaService.js';
 import { v4 as uuidv4 } from 'uuid';
-import Product from '../models/Product';
+import Product from '../models/Product.js';
 
 export const getWhatsAppStatus = (req: Request, res: Response) => {
   const status = getWhatsAppQR();

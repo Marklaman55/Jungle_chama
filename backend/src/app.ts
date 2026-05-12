@@ -1,21 +1,20 @@
 import express from 'express';
 import cors from 'cors';
-import path from 'path';
 import { fileURLToPath } from 'url';
+import path from 'path';
 import fs from 'fs';
 import multer from 'multer';
-import { connectDatabase } from './config/database';
-import { corsOptions } from './config/cors';
-import { errorMiddleware } from './middleware/ErrorMiddleware';
-import AuthRoutes from './routes/AuthRoutes';
-import AdminRoutes from './routes/AdminRoutes';
-import MemberRoutes from './routes/MemberRoutes';
-import PaymentRoutes from './routes/PaymentRoutes';
-import WebhookRoutes from './routes/WebhookRoutes';
-import { startCron } from './cron/DailyCron';
+import { connectDatabase } from './config/database.js.js';
+import { corsOptions } from './config/cors.js.js';
+import { errorMiddleware } from './middleware/ErrorMiddleware.js.js';
+import AuthRoutes from './routes/AuthRoutes.js.js';
+import AdminRoutes from './routes/AdminRoutes.js.js';
+import MemberRoutes from './routes/MemberRoutes.js.js';
+import PaymentRoutes from './routes/PaymentRoutes.js.js';
+import WebhookRoutes from './routes/WebhookRoutes.js.js';
+import { startCron } from './cron/DailyCron.js.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const uploadsDir = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadsDir)) {
@@ -55,13 +54,13 @@ const createApp = async () => {
 
   startCron();
 
-  try {
-    const { initWhatsApp } = await import('./services/WhatsAppService');
-    if (process.env.ENABLE_WHATSAPP !== 'false') {
+  if (process.env.ENABLE_WHATSAPP !== 'false') {
+    try {
+      const { initWhatsApp } = await import('./services/WhatsAppService.js');
       await initWhatsApp();
+    } catch (err) {
+      console.warn('WhatsApp service disabled or unavailable in this environment');
     }
-  } catch (err) {
-    console.warn('WhatsApp service disabled or unavailable in this environment');
   }
 
   app.use('/api/auth', AuthRoutes);
