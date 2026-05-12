@@ -1,7 +1,6 @@
 {
   "name": "jungle-chama-backend",
   "version": "1.0.0",
-  "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
