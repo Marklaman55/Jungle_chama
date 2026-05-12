@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "start": "rm -rf dist && tsc && node dist/server.js",
+    "start": "node dist/server.js",
     "build": "rm -rf dist && tsc",
     "lint": "tsc --noEmit"
   },
