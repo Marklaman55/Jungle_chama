@@ -19,7 +19,9 @@ import {
   triggerMemberStkPush,
   updateSystemConfig,
   approveManualDeposit,
-  approveProduct
+  approveProduct,
+  updateMember,
+  deleteMember
 } from '../controllers/AdminController';
 import { authMiddleware } from '../middleware/AuthMiddleware';
 import { roleMiddleware } from '../middleware/RoleMiddleware';
@@ -53,5 +55,7 @@ router.post('/reminders/send', sendDailyReminders);
 router.post('/update-balance', updateMemberBalance);
 router.post('/trigger-stk', triggerMemberStkPush);
 router.post('/transactions/approve-manual', approveManualDeposit);
+router.put('/members/:id', updateMember);
+router.delete('/members/:id', deleteMember);
 
 export default router;

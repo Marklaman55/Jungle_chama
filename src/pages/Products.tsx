@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShoppingBag, ArrowRight, Loader2, Package, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ShoppingBag, ArrowRight, Loader2, Package, CheckCircle2, AlertCircle, ShoppingCart } from 'lucide-react';
 
 const Products: React.FC = () => {
   const { user, getToken, updateBalance } = useAuth();
+  const { addToCart, totalItems } = useCart();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [payoutOrder, setPayoutOrder] = useState<any>(null);
@@ -21,9 +23,14 @@ const Products: React.FC = () => {
       const productsRes = await fetch('/api/products', { headers });
       const productsData = await productsRes.json();
       if (productsRes.ok) {
-        // Only show approved products or those with no status (global admin products)
-        const approvedProducts = productsData.filter((p: any) => !p.status || p.status === 'approved');
-        setProducts(approvedProducts);
+        if (Array.isArray(productsData)) {
+          // Only show approved products or those with no status (global admin products)
+          const approvedProducts = productsData.filter((p: any) => !p.status || p.status === 'approved');
+          setProducts(approvedProducts);
+        } else {
+          console.error('Expected array of products, got:', productsData);
+          setProducts([]);
+        }
       }
 
       // Fetch pending payout order
@@ -108,9 +115,32 @@ const Products: React.FC = () => {
     }
   };
 
+  const onAddToCart = (product: any) => {
+    addToCart(product);
+    setNotification({ message: `${product.name} added to cart!`, type: 'success' });
+    setTimeout(() => setNotification(null), 3000);
+  };
+
   return (
     <div className="min-h-screen bg-[#F8F9FA] atmosphere-gradient">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        {/* Floating Cart Info */}
+        {totalItems > 0 && (
+          <Link 
+            to="/dashboard"
+            className="fixed bottom-8 right-8 z-[100] bg-black text-white px-8 py-5 rounded-full shadow-2xl flex items-center gap-4 hover:scale-105 transition-all group"
+          >
+            <div className="relative">
+              <ShoppingCart size={24} />
+              <span className="absolute -top-3 -right-3 w-6 h-6 bg-jungle text-white text-[10px] font-black rounded-full flex items-center justify-center animate-pulse shadow-lg">
+                {totalItems}
+              </span>
+            </div>
+            <span className="font-black text-sm uppercase tracking-widest mr-2">Open Cart</span>
+            <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+          </Link>
+        )}
+
         <div className="mb-24 text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -122,21 +152,32 @@ const Products: React.FC = () => {
                 <ShoppingBag size={14} className="text-jungle" />
                 The Jungle Collection
               </div>
-              {user && (
-                <Link 
-                  to="/profile"
-                  className="px-6 py-2 bg-white text-black border border-gray-100 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-jungle hover:text-white transition-all shadow-sm flex items-center gap-2"
-                >
-                  <Package size={14} />
-                  My Profile
-                </Link>
-              )}
+              <div className="flex items-center gap-3">
+                {user && (
+                  <Link 
+                    to="/profile"
+                    className="px-6 py-2 bg-white text-black border border-gray-100 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-jungle hover:text-white transition-all shadow-sm flex items-center gap-2"
+                  >
+                    <Package size={14} />
+                    My Profile
+                  </Link>
+                )}
+                {totalItems > 0 && (
+                  <Link 
+                    to="/dashboard"
+                    className="px-6 py-2 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-800 transition-all shadow-sm flex items-center gap-2"
+                  >
+                    <ShoppingCart size={14} className="text-jungle" />
+                    Cart ({totalItems})
+                  </Link>
+                )}
+              </div>
             </div>
             <h1 className="text-6xl md:text-8xl font-display uppercase leading-[0.85] tracking-tight text-black mb-8">
               Jungle <br /> <span className="text-jungle">Collection.</span>
             </h1>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto font-medium leading-relaxed">
-              Explore our curated items. Complete your savings cycle to claim a reward or <span className="text-black font-black">buy directly</span> using your balance.
+              Explore our curated items. Complete your savings cycle to claim a reward, <span className="text-black font-black">add to cart</span> for later, or buy directly.
             </p>
           </motion.div>
 
@@ -178,8 +219,26 @@ const Products: React.FC = () => {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-32">
-            <Loader2 className="animate-spin text-jungle" size={56} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-white rounded-[3rem] overflow-hidden shadow-[0_8px_40px_rgb(0,0,0,0.01)] border border-gray-100">
+                <div className="aspect-square skeleton"></div>
+                <div className="p-10 space-y-6">
+                  <div className="flex justify-between">
+                    <div className="h-8 w-32 skeleton rounded-xl"></div>
+                    <div className="h-4 w-16 skeleton rounded-full"></div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-4 w-full skeleton rounded-lg"></div>
+                    <div className="h-4 w-4/5 skeleton rounded-lg"></div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="h-14 w-full skeleton rounded-2xl"></div>
+                    <div className="h-10 w-full skeleton rounded-2xl opacity-50"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : products.length === 0 ? (
           <div className="text-center py-32 bg-white rounded-[4rem] border-2 border-dashed border-gray-100 flex flex-col items-center gap-6">
@@ -255,14 +314,22 @@ const Products: React.FC = () => {
                     )}
                     
                     <button 
+                      onClick={() => onAddToCart(product)}
+                      disabled={product.stock <= 0}
+                      className="w-full py-5 bg-black text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-gray-900 transition-all shadow-xl flex items-center justify-center gap-3 group"
+                    >
+                      Add to Cart
+                      <ShoppingCart size={20} className="group-hover:scale-110 transition-transform" />
+                    </button>
+
+                    <button 
                       onClick={() => handleBuy(product.id)}
                       disabled={buying === product.id || product.stock <= 0 || (user?.balance || 0) < product.price}
-                      className="w-full py-5 bg-black text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-gray-900 transition-all disabled:opacity-50 shadow-xl flex items-center justify-center gap-3 group"
+                      className="w-full py-4 bg-white text-black border border-gray-100 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-50 transition-all flex items-center justify-center gap-2 group"
                     >
-                      {buying === product.id ? <Loader2 className="animate-spin" size={20} /> : (
+                      {buying === product.id ? <Loader2 className="animate-spin" size={14} /> : (
                         <>
                           Buy with Balance
-                          <ShoppingBag size={20} className="group-hover:scale-110 transition-transform" />
                         </>
                       )}
                     </button>
@@ -424,16 +491,28 @@ const Products: React.FC = () => {
                       {redeeming ? <Loader2 className="animate-spin" size={20} /> : 'Claim Reward'}
                     </button>
                   ) : (
-                    <button 
-                      onClick={() => {
-                        setShowProductDetails(false);
-                        handleBuy(selectedProduct._id || selectedProduct.id);
-                      }}
-                      disabled={buying === (selectedProduct._id || selectedProduct.id) || selectedProduct.stock <= 0 || (user?.balance || 0) < selectedProduct.price}
-                      className="w-full py-6 bg-black text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-gray-800 transition-all disabled:opacity-50 shadow-2xl flex items-center justify-center gap-3"
-                    >
-                      {buying === (selectedProduct._id || selectedProduct.id) ? <Loader2 className="animate-spin" size={20} /> : 'Buy Now'}
-                    </button>
+                    <div className="space-y-3">
+                      <button 
+                        onClick={() => {
+                          setShowProductDetails(false);
+                          onAddToCart(selectedProduct);
+                        }}
+                        disabled={selectedProduct.stock <= 0}
+                        className="w-full py-6 bg-black text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-gray-800 transition-all disabled:opacity-50 shadow-2xl flex items-center justify-center gap-3"
+                      >
+                        Add to Cart
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setShowProductDetails(false);
+                          handleBuy(selectedProduct._id || selectedProduct.id);
+                        }}
+                        disabled={buying === (selectedProduct._id || selectedProduct.id) || selectedProduct.stock <= 0 || (user?.balance || 0) < selectedProduct.price}
+                        className="w-full py-5 bg-white text-black border border-gray-100 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+                      >
+                        {buying === (selectedProduct._id || selectedProduct.id) ? <Loader2 className="animate-spin" size={14} /> : 'Buy Now with Balance'}
+                      </button>
+                    </div>
                   )}
                   <button 
                     onClick={() => setShowProductDetails(false)}

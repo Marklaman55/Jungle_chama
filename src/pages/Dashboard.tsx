@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Wallet, 
@@ -24,12 +25,15 @@ import {
   Eye,
   User as UserIcon,
   Image as ImageIcon,
-  MessageSquare
+  MessageSquare,
+  ShoppingCart,
+  Trash2
 } from 'lucide-react';
 import { format } from 'date-fns';
 
 const Dashboard: React.FC = () => {
-  const { user, getToken } = useAuth();
+  const { user, getToken, updateBalance } = useAuth();
+  const { cart, removeFromCart, clearCart, totalPrice, totalItems } = useCart();
   const [searchParams, setSearchParams] = useSearchParams();
   const [stats, setStats] = useState<any>({ totalSaved: 0, referralCount: 0, currentCycle: null });
   const [payments, setPayments] = useState<any[]>([]);
@@ -92,6 +96,52 @@ const Dashboard: React.FC = () => {
 
     return () => clearInterval(interval);
   }, [user]);
+
+  const handleCheckout = async () => {
+    if (cart.length === 0 || !user) return;
+    
+    if (user.balance < totalPrice) {
+      setNotification({ message: 'Insufficient balance to checkout cart.', type: 'error' });
+      return;
+    }
+
+    setPaying(true);
+    try {
+      const token = await getToken();
+      let successCount = 0;
+      
+      for (const item of cart) {
+        const res = await fetch('/api/admin/products/buy', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ productId: item.id, userId: user.userId })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          updateBalance(data.newBalance);
+          successCount++;
+        }
+      }
+
+      if (successCount === cart.length) {
+        setNotification({ message: 'All items purchased successfully!', type: 'success' });
+        clearCart();
+        fetchData();
+      } else if (successCount > 0) {
+        setNotification({ message: `Purchased ${successCount} items, some failed.`, type: 'error' });
+        fetchData();
+      } else {
+        setNotification({ message: 'Failed to purchase items.', type: 'error' });
+      }
+    } catch (err) {
+      setNotification({ message: 'Checkout failed', type: 'error' });
+    } finally {
+      setPaying(false);
+    }
+  };
 
   const handlePay = () => {
     const nextDay = 0; // Not really using day number here if they just enter amount
@@ -246,7 +296,40 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="animate-spin text-jungle" size={40} /></div>;
+  if (loading) return (
+    <div className="min-h-screen bg-[#F8F9FA] p-12">
+      <div className="max-w-7xl mx-auto space-y-12">
+        <div className="flex justify-between items-end">
+          <div className="space-y-4">
+            <div className="h-4 w-32 skeleton rounded-full"></div>
+            <div className="h-12 w-64 skeleton rounded-2xl"></div>
+          </div>
+          <div className="flex gap-4">
+            <div className="h-12 w-32 skeleton rounded-2xl"></div>
+            <div className="h-12 w-40 skeleton rounded-2xl"></div>
+          </div>
+        </div>
+        <div className="grid grid-cols-12 gap-8">
+          <div className="col-span-8 h-80 skeleton rounded-[3rem]"></div>
+          <div className="col-span-4 h-80 skeleton-dark rounded-[3rem]"></div>
+        </div>
+        <div className="grid grid-cols-12 gap-8">
+          <div className="col-span-8 space-y-8">
+            <div className="h-96 skeleton rounded-[3rem]"></div>
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-24 skeleton rounded-[2rem]"></div>
+              ))}
+            </div>
+          </div>
+          <div className="col-span-4 space-y-8">
+            <div className="h-[400px] skeleton-dark rounded-[3rem]"></div>
+            <div className="h-64 skeleton rounded-[3rem]"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   const paidDaysCount = stats?.currentCycle ? payments.filter(p => p.status === 'completed' && p.type === 'deposit').length : 0;
   const progress = Math.min((paidDaysCount / 10) * 100, 100);
@@ -396,78 +479,98 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 {/* Manual Payment Section */}
-                {systemConfig?.paymentNumber && (
-                  <div id="manual-payment-section" className="bg-white p-10 rounded-[3rem] shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-gray-100 overflow-hidden relative">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
-                    <div className="flex items-center justify-between mb-8">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-600">
-                          <Wallet size={24} />
-                        </div>
-                        <div>
-                          <h2 className="text-2xl font-black text-black tracking-tight">{systemConfig.manualPaymentDetails || 'Manual Payment'}</h2>
-                          <p className="text-gray-400 text-sm font-medium">Alternative way to pay if STK Push is not working.</p>
-                        </div>
+                <div id="manual-payment-section" className="bg-white p-10 rounded-[3rem] shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-gray-100 overflow-hidden relative">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+                  <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-600">
+                        <Wallet size={24} />
                       </div>
-                      <div className="bg-amber-100 text-amber-700 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">
-                        {systemConfig.paymentType}
+                      <div>
+                        <h2 className="text-2xl font-black text-black tracking-tight">{systemConfig?.manualPaymentDetails || 'Manual Payment'}</h2>
+                        <p className="text-gray-400 text-sm font-medium">Follow instructions below to pay manually.</p>
                       </div>
                     </div>
+                    <div className="bg-amber-100 text-amber-700 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">
+                      {systemConfig?.paymentType || 'Manual'}
+                    </div>
+                  </div>
 
-                    <div className="flex flex-col md:flex-row gap-8">
-                      <div className="md:w-1/3 bg-gray-50 p-6 rounded-2xl border border-gray-100 flex flex-col justify-center text-center">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Payment Details</p>
-                        <p className="text-3xl font-black text-black mb-4 tracking-tighter">{systemConfig.paymentNumber}</p>
-                        <button 
-                          onClick={() => {
+                  <div className="flex flex-col md:flex-row gap-8">
+                    <div className="md:w-1/3 bg-black text-white p-8 rounded-[2.5rem] flex flex-col justify-center text-center relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+                      <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-3">Copy Details</p>
+                      <p className="text-3xl font-black text-jungle mb-6 tracking-tighter">{systemConfig?.paymentNumber || 'N/A'}</p>
+                      <button 
+                        onClick={() => {
+                          if (systemConfig?.paymentNumber) {
                             navigator.clipboard.writeText(systemConfig.paymentNumber);
-                            setNotification({ message: 'Number copied to clipboard!', type: 'success' });
-                          }}
-                          className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-jungle hover:text-jungle-dark transition-colors"
-                        >
-                          <Copy size={12} /> Copy Number
-                        </button>
-                      </div>
+                            setNotification({ message: 'Payment number copied!', type: 'success' });
+                          }
+                        }}
+                        className="w-full py-4 bg-white/10 border border-white/20 rounded-2xl flex items-center justify-center gap-3 text-sm font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all group/btn"
+                      >
+                        <Copy size={16} className="group-hover/btn:scale-110 transition-transform" />
+                        Copy Number
+                      </button>
+                    </div>
 
                       <div className="flex-1 space-y-6">
+                        <div className="p-6 bg-amber-50 rounded-2xl border border-amber-100/50">
+                          <p className="text-sm text-amber-900 font-medium leading-relaxed">
+                            <span className="font-black">Step 1:</span> Pay the amount below to the provided {systemConfig?.paymentType || 'account'}.<br/>
+                            <span className="font-black">Step 2:</span> Paste the M-Pesa confirmation message below for admin verification.
+                          </p>
+                        </div>
+
                         <form onSubmit={handleManualDeposit} className="space-y-4">
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Paid Amount</label>
-                              <input 
-                                type="number" 
-                                required
-                                value={manualAmount}
-                                onChange={(e) => setManualAmount(e.target.value)}
-                                className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:ring-4 focus:ring-amber-500/5 focus:border-amber-500/30 font-black transition-all"
-                                placeholder="500"
-                              />
+                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Paid Amount (KES)</label>
+                              <div className="relative">
+                                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 font-black">KES</span>
+                                <input 
+                                  type="number" 
+                                  required
+                                  value={manualAmount}
+                                  onChange={(e) => setManualAmount(e.target.value)}
+                                  className="w-full pl-16 pr-6 py-5 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-4 focus:ring-amber-500/5 focus:border-amber-500/30 font-black transition-all"
+                                  placeholder="500"
+                                />
+                              </div>
                             </div>
                             <div className="space-y-2">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Transaction Message</label>
-                              <input 
-                                type="text" 
-                                required
-                                value={manualMessage}
-                                onChange={(e) => setManualMessage(e.target.value)}
-                                className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:ring-4 focus:ring-amber-500/5 focus:border-amber-500/30 font-black transition-all"
-                                placeholder="Paste M-Pesa msg here"
-                              />
+                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Confirmation Message</label>
+                              <div className="relative">
+                                <MessageSquare className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                <input 
+                                  type="text" 
+                                  required
+                                  value={manualMessage}
+                                  onChange={(e) => setManualMessage(e.target.value)}
+                                  className="w-full pl-16 pr-6 py-5 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-4 focus:ring-amber-500/5 focus:border-amber-500/30 font-black transition-all"
+                                  placeholder="Paste M-Pesa text here"
+                                />
+                              </div>
                             </div>
                           </div>
                           <button 
                             type="submit"
                             disabled={paying}
-                            className="w-full py-4 bg-black text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-amber-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                            className="w-full py-5 bg-black text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-amber-600 transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-xl shadow-black/10"
                           >
-                            {paying ? <Loader2 className="animate-spin" size={16} /> : 'Submit for Verification'}
+                            {paying ? <Loader2 className="animate-spin" size={20} /> : (
+                              <>
+                                <CheckCircle2 size={20} />
+                                Submit Verification Request
+                              </>
+                            )}
                           </button>
                         </form>
                       </div>
                     </div>
                   </div>
-                )}
-            </div>
+                </div>
 
             {/* Balance Overview Widget */}
             <div className="lg:col-span-4">
@@ -575,6 +678,113 @@ const Dashboard: React.FC = () => {
               </div>
             </section>
 
+            {/* Pending Approvals */}
+            {payments.filter(p => p.type === 'manual_deposit' && p.status === 'pending').length > 0 && (
+              <section className="bg-amber-50/50 p-10 rounded-[3rem] border border-amber-100 mb-10">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center">
+                    <Clock size={24} />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-black text-amber-900 tracking-tight">Verification Pending</h2>
+                    <p className="text-amber-700/60 text-sm font-medium">Your manual deposits are being reviewed by the admin.</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  {payments.filter(p => p.type === 'manual_deposit' && p.status === 'pending').map((p, i) => (
+                    <div key={i} className="bg-white p-6 rounded-2xl border border-amber-100 flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500 italic font-black">
+                          M
+                        </div>
+                        <div>
+                          <p className="font-black text-amber-900 leading-none mb-1">KES {p.amount}</p>
+                          <p className="text-[10px] text-amber-600 font-bold uppercase tracking-widest">{new Date(p.date).toLocaleString()}</p>
+                        </div>
+                      </div>
+                      <span className="px-4 py-1.5 bg-amber-50 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-widest animate-pulse">
+                        Awaiting Admin
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Shopping Cart Section */}
+            {cart.length > 0 && (
+              <section className="bg-white p-10 rounded-[3rem] shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-gray-100 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-jungle/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
+                <div className="flex items-center justify-between mb-8 relative z-10">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-black text-white rounded-2xl flex items-center justify-center">
+                      <ShoppingCart size={24} />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-black text-black tracking-tight">My Shopping Cart</h2>
+                      <p className="text-gray-400 text-sm font-medium">{cart.length} items ready for checkout</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={clearCart}
+                    className="text-[10px] font-black uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors"
+                  >
+                    Clear All
+                  </button>
+                </div>
+
+                <div className="space-y-4 mb-10 relative z-10">
+                  {cart.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between p-6 bg-gray-50 rounded-2xl border border-gray-100 group">
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+                          {item.image_url ? (
+                            <img src={item.image_url} className="w-full h-full object-cover" alt={item.name} />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-300 font-black text-xl">
+                              {item.name.charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="font-black text-black">{item.name}</h4>
+                          <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Qty: {item.quantity} • KES {item.price}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-6">
+                        <p className="font-black text-lg text-black">KES {item.price * item.quantity}</p>
+                        <button 
+                          onClick={() => removeFromCart(item.id)}
+                          className="p-3 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-8 pt-8 border-t border-gray-50 relative z-10">
+                  <div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Amount</p>
+                    <p className="text-4xl font-black text-black tracking-tighter">KES {totalPrice}</p>
+                  </div>
+                  <button
+                    onClick={handleCheckout}
+                    disabled={paying || cart.length === 0}
+                    className="w-full sm:w-auto px-10 py-5 bg-jungle text-white rounded-[1.5rem] font-black text-sm uppercase tracking-widest hover:bg-jungle-dark transition-all shadow-2xl shadow-jungle/30 flex items-center justify-center gap-3 disabled:opacity-50 group"
+                  >
+                    {paying ? <Loader2 className="animate-spin" size={20} /> : (
+                      <>
+                        Checkout Now
+                        <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </section>
+            )}
+
             {/* Recent Payments Section */}
             <section>
               <div className="flex items-center justify-between mb-8">
@@ -603,7 +813,9 @@ const Dashboard: React.FC = () => {
                           <CheckCircle2 size={28} />
                         </div>
                         <div>
-                          <p className="font-black text-lg text-black tracking-tight">{payment.type.charAt(0).toUpperCase() + payment.type.slice(1)}</p>
+                          <p className="font-black text-lg text-black tracking-tight">
+                            {payment.type === 'manual_deposit' ? 'Manual Deposit' : payment.type.charAt(0).toUpperCase() + payment.type.slice(1)}
+                          </p>
                           <div className="flex items-center gap-2 mt-1">
                             <Calendar size={12} className="text-gray-300" />
                             <p className="text-xs text-gray-400 font-medium">{format(new Date(payment.date), 'MMM d, yyyy • h:mm a')}</p>

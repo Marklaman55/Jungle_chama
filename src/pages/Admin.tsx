@@ -43,12 +43,19 @@ const Admin: React.FC = () => {
   
   const [newProduct, setNewProduct] = useState<any>({ name: '', description: '', image_url: '', video_url: '', media: [], stock: 10, price: 1000 });
   const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [editingMember, setEditingMember] = useState<any>(null);
   const [whatsappStatus, setWhatsappStatus] = useState<{ qr: string | null, isReady: boolean } | null>(null);
   const [productSearch, setProductSearch] = useState('');
   const [memberSearch, setMemberSearch] = useState('');
   const [uploading, setUploading] = useState(false);
 
-  const [configForm, setConfigForm] = useState({ paymentNumber: '', paymentType: 'Till', manualPaymentDetails: '' });
+  const [configForm, setConfigForm] = useState({ 
+    paymentNumber: '', 
+    paymentType: 'Till', 
+    manualPaymentDetails: '',
+    cycleDay: 1,
+    systemState: 'RECRUITMENT'
+  });
 
   const fetchData = async () => {
     setLoading(true);
@@ -83,7 +90,9 @@ const Admin: React.FC = () => {
         setConfigForm({ 
           paymentNumber: data.paymentNumber || '', 
           paymentType: data.paymentType || 'Till',
-          manualPaymentDetails: data.manualPaymentDetails || '' 
+          manualPaymentDetails: data.manualPaymentDetails || '',
+          cycleDay: data.cycleDay || 1,
+          systemState: data.systemState || 'RECRUITMENT'
         });
       } else if (activeTab === 'approvals') {
         const res = await fetch('/api/admin/transactions', { headers });
@@ -187,8 +196,18 @@ const Admin: React.FC = () => {
     }
   };
 
-  const handleDeleteProduct = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this product?')) return;
+  const handleDeleteProduct = async (id: string, name?: string) => {
+    const confirmationMessage = name 
+      ? `WARNING: You are about to permanently delete "${name}".\n\nThis action will remove the product and all associated media from the inventory.\n\nAre you sure you want to proceed?` 
+      : 'Are you sure you want to delete this product?';
+      
+    if (!window.confirm(confirmationMessage)) return;
+    
+    // Explicit confirmation for Rustic Wooden Chair
+    if (name?.toLowerCase().includes('rustic wooden chair')) {
+      if (!window.confirm('CRITICAL: This is the Rustic Wooden Chair. Confirming final deletion...')) return;
+    }
+
     try {
       const token = await getToken();
       const res = await fetch(`/api/admin/products/${id}`, {
@@ -326,7 +345,51 @@ const Admin: React.FC = () => {
     }
   };
 
-  const handleApproveDeposit = async (id: string, status: 'completed' | 'failed') => {
+  const handleUpdateMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMember) return;
+    try {
+      const token = await getToken();
+      const res = await fetch(`/api/admin/members/${editingMember._id || editingMember.id}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(editingMember)
+      });
+      if (res.ok) {
+        setNotification({ message: 'Member updated successfully!', type: 'success' });
+        setEditingMember(null);
+        fetchData();
+      } else {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to update member');
+      }
+    } catch (err: any) {
+      setNotification({ message: err.message, type: 'error' });
+    }
+  };
+
+  const handleApproveDeposit = async (id: string, status: 'completed' | 'failed', currentAmount?: number) => {
+    let rejectionReason = null;
+    let approvedAmount = undefined;
+
+    if (status === 'completed') {
+      const inputAmount = window.prompt(`Confirm approved amount (KES):`, currentAmount?.toString());
+      if (inputAmount === null) return; // User cancelled
+      approvedAmount = Number(inputAmount);
+      if (isNaN(approvedAmount)) {
+        alert('Invalid amount entered.');
+        return;
+      }
+    }
+
+    if (status === 'failed') {
+      rejectionReason = window.prompt('Enter a reason for rejection (optional, will be sent to member via WhatsApp):');
+      if (rejectionReason === null) return; // User cancelled
+    }
+
     try {
       const token = await getToken();
       const res = await fetch('/api/admin/transactions/approve-manual', {
@@ -335,7 +398,7 @@ const Admin: React.FC = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ transactionId: id, status })
+        body: JSON.stringify({ transactionId: id, status, rejectionReason, approvedAmount })
       });
       if (res.ok) {
         setNotification({ message: `Deposit ${status === 'completed' ? 'approved' : 'rejected'}`, type: 'success' });
@@ -343,6 +406,27 @@ const Admin: React.FC = () => {
       }
     } catch (err) {
       setNotification({ message: 'Error processing approval', type: 'error' });
+    }
+  };
+
+  const handleDeleteMember = async (id: string, name: string) => {
+    if (!window.confirm(`CRITICAL: Are you sure you want to delete member "${name}"? This will permanently remove their access and data. This action cannot be undone.`)) return;
+
+    try {
+      const token = await getToken();
+      const res = await fetch(`/api/admin/members/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setNotification({ message: 'Member deleted successfully!', type: 'success' });
+        fetchData();
+      } else {
+        throw new Error('Failed to delete member');
+      }
+    } catch (err) {
+      console.error(err);
+      setNotification({ message: 'Error deleting member.', type: 'error' });
     }
   };
 
@@ -841,7 +925,7 @@ const Admin: React.FC = () => {
                                   <Edit3 size={14} /> Edit
                                 </button>
                                 <button 
-                                  onClick={() => handleDeleteProduct(product._id || product.id)}
+                                  onClick={() => handleDeleteProduct(product._id || product.id, product.name)}
                                   className="p-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all"
                                 >
                                   <Trash2 size={16} />
@@ -908,9 +992,8 @@ const Admin: React.FC = () => {
                     <tr className="bg-gray-50/50">
                       <th className="px-10 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Member Identity</th>
                       <th className="px-10 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Payout Slot</th>
-                      <th className="px-10 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Terms Status</th>
+                      <th className="px-10 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Finance</th>
                       <th className="px-10 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Contact Details</th>
-                      <th className="px-10 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Registration</th>
                       <th className="px-10 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Access Level</th>
                     </tr>
                   </thead>
@@ -944,27 +1027,24 @@ const Admin: React.FC = () => {
                         </td>
                         <td className="px-10 py-8">
                           <div className="flex flex-col gap-1">
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest w-fit ${
-                              member.termsAccepted ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-                            }`}>
-                              {member.termsAccepted ? 'Terms Accepted' : 'Terms Pending'}
-                            </span>
-                            {member.termsAcceptedAt && (
-                              <span className="text-[8px] font-bold text-gray-400 uppercase ml-1">
-                                {new Date(member.termsAcceptedAt).toLocaleDateString()}
-                              </span>
-                            )}
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-black text-jungle">KES {member.balance?.toLocaleString()}</span>
+                                <span className="text-[10px] font-bold text-gray-400 uppercase">Balance</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-black text-black">KES {member.expectedDaily?.toLocaleString()}</span>
+                                <span className="text-[10px] font-bold text-gray-400 uppercase">Daily</span>
+                            </div>
                           </div>
                         </td>
                         <td className="px-10 py-8">
                           <p className="text-sm font-bold text-black">{member.email}</p>
                           <p className="text-xs text-gray-400 font-medium mt-1">{member.phone}</p>
-                        </td>
-                        <td className="px-10 py-8">
-                          <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
-                            <History size={14} className="text-gray-300" />
-                            {new Date(member.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                          </div>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest mt-2 ${
+                            member.termsAccepted ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                          }`}>
+                            {member.termsAccepted ? 'Terms OK' : 'No Terms'}
+                          </span>
                         </td>
                         <td className="px-10 py-8">
                           <div className="flex items-center gap-4">
@@ -976,6 +1056,13 @@ const Admin: React.FC = () => {
                               {member.role}
                             </span>
                             <div className="flex items-center gap-2">
+                              <button 
+                                onClick={() => setEditingMember(member)}
+                                className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-all"
+                                title="Edit Member"
+                              >
+                                <Edit3 size={16} />
+                              </button>
                               <button 
                                 onClick={() => handleUpdateBalance(member.userId)}
                                 className="p-2 text-jungle hover:bg-jungle/5 rounded-lg transition-all"
@@ -989,6 +1076,13 @@ const Admin: React.FC = () => {
                                 title="STK Push Request"
                               >
                                 <TrendingUp size={16} />
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteMember(member._id || member.id, member.name)}
+                                className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                title="Delete Member"
+                              >
+                                <Trash2 size={16} />
                               </button>
                             </div>
                           </div>
@@ -1219,6 +1313,31 @@ const Admin: React.FC = () => {
               </div>
 
               <form onSubmit={handleUpdateConfig} className="space-y-8">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Current Cycle Day</label>
+                    <input
+                      type="number"
+                      required
+                      value={configForm.cycleDay}
+                      onChange={(e) => setConfigForm({ ...configForm, cycleDay: parseInt(e.target.value) })}
+                      className="w-full px-6 py-5 bg-gray-50 border-none rounded-2xl focus:ring-4 focus:ring-jungle/5 outline-none font-bold"
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">System State</label>
+                    <select
+                      value={configForm.systemState}
+                      onChange={(e) => setConfigForm({ ...configForm, systemState: e.target.value as any })}
+                      className="w-full px-6 py-5 bg-gray-50 border-none rounded-2xl focus:ring-4 focus:ring-jungle/5 outline-none font-bold"
+                    >
+                      <option value="RECRUITMENT">Recruitment</option>
+                      <option value="SAVING">Saving</option>
+                      <option value="BREAK">Break</option>
+                    </select>
+                  </div>
+                </div>
+
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Manual Payment Header</label>
                     <input
@@ -1233,8 +1352,8 @@ const Admin: React.FC = () => {
 
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Payment Method</label>
-                  <div className="grid grid-cols-2 gap-4">
-                    {['Till', 'Phone Number'].map(type => (
+                  <div className="grid grid-cols-3 gap-4">
+                    {['Till', 'Paybill', 'Personal'].map(type => (
                       <button
                         key={type}
                         type="button"
@@ -1318,13 +1437,13 @@ const Admin: React.FC = () => {
 
                        <div className="flex gap-3">
                          <button 
-                           onClick={() => handleApproveDeposit(dep._id || dep.id, 'completed')}
+                           onClick={() => handleApproveDeposit(dep._id || dep.id, 'completed', dep.amount)}
                            className="flex-1 py-4 bg-jungle text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-jungle-dark shadow-lg shadow-jungle/20 transition-all"
                          >
                            Approve
                          </button>
                          <button 
-                           onClick={() => handleApproveDeposit(dep._id || dep.id, 'failed')}
+                           onClick={() => handleApproveDeposit(dep._id || dep.id, 'failed', dep.amount)}
                            className="flex-1 py-4 bg-red-50 text-red-500 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all"
                          >
                            Reject
@@ -1341,6 +1460,129 @@ const Admin: React.FC = () => {
 
       {/* Modals & Overlays */}
       <AnimatePresence>
+        {editingMember && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setEditingMember(null)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative bg-white rounded-[3rem] p-12 max-w-2xl w-full shadow-2xl overflow-y-auto max-h-[90vh]"
+            >
+              <div className="flex justify-between items-center mb-10">
+                <h2 className="text-3xl font-black text-black tracking-tight">Edit Member</h2>
+                <button onClick={() => setEditingMember(null)} className="p-3 hover:bg-gray-100 rounded-full transition-colors">
+                  <X size={24} />
+                </button>
+              </div>
+              
+              <form onSubmit={handleUpdateMember} className="space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Full Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={editingMember.name}
+                      onChange={(e) => setEditingMember({ ...editingMember, name: e.target.value })}
+                      className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-4 focus:ring-jungle/5 outline-none font-bold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Email</label>
+                    <input
+                      type="email"
+                      required
+                      value={editingMember.email}
+                      onChange={(e) => setEditingMember({ ...editingMember, email: e.target.value })}
+                      className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-4 focus:ring-jungle/5 outline-none font-bold"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Phone Number</label>
+                    <input
+                      type="text"
+                      required
+                      value={editingMember.phone}
+                      onChange={(e) => setEditingMember({ ...editingMember, phone: e.target.value })}
+                      className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-4 focus:ring-jungle/5 outline-none font-bold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Payout Position</label>
+                    <input
+                      type="number"
+                      value={editingMember.payout_number || ''}
+                      onChange={(e) => setEditingMember({ ...editingMember, payout_number: parseInt(e.target.value) })}
+                      className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-4 focus:ring-jungle/5 outline-none font-bold"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Current Balance (KES)</label>
+                    <input
+                      type="number"
+                      required
+                      value={editingMember.balance}
+                      onChange={(e) => setEditingMember({ ...editingMember, balance: parseFloat(e.target.value) })}
+                      className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-4 focus:ring-jungle/5 outline-none font-bold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Expected Daily (KES)</label>
+                    <input
+                      type="number"
+                      required
+                      value={editingMember.expectedDaily}
+                      onChange={(e) => setEditingMember({ ...editingMember, expectedDaily: parseFloat(e.target.value) })}
+                      className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-4 focus:ring-jungle/5 outline-none font-bold"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Role</label>
+                  <select
+                    value={editingMember.role}
+                    onChange={(e) => setEditingMember({ ...editingMember, role: e.target.value })}
+                    className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-4 focus:ring-jungle/5 outline-none font-bold"
+                  >
+                    <option value="member">Member</option>
+                    <option value="admin">Administrator</option>
+                  </select>
+                </div>
+
+                <div className="flex gap-4 pt-6">
+                  <button
+                    type="button"
+                    onClick={() => setEditingMember(null)}
+                    className="flex-1 py-5 bg-gray-100 text-gray-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-200 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-5 bg-jungle text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-jungle-dark transition-all shadow-xl shadow-jungle/20"
+                  >
+                    Update Member
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+
         {editingProduct && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
             <motion.div

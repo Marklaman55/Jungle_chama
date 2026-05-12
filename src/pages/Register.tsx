@@ -228,6 +228,30 @@ This agreement shall serve as digital evidence of acceptance upon registration a
     a.click();
   };
 
+  const downloadCSVConfirmation = () => {
+    const headers = ['Field', 'Value'];
+    const data = [
+      ['Name', formData.name],
+      ['Email', formData.email],
+      ['Phone', formData.phone],
+      ['Registration Date', new Date().toLocaleString()],
+      ['Terms Accepted', 'Yes'],
+      ['Platform', 'Jungle Chama']
+    ];
+    
+    const csvContent = [
+      headers.join(','),
+      ...data.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `JungleChama_Confirmation_${formData.name.replace(/\s+/g, '_')}.csv`;
+    a.click();
+  };
+
   const validate = () => {
     const errors: Record<string, string> = {};
     

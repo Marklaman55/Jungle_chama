@@ -234,7 +234,7 @@ async function startServer() {
   });
   
   // Public/Member accessible products and payments
-  app.get('/api/products', authMiddleware, getProducts);
+  app.get('/api/products', getProducts);
   app.get('/api/payments/my', authMiddleware, getMyPayments);
 
   // Fallback for non-existent API routes - ALWAYS RETURN JSON for /api/*

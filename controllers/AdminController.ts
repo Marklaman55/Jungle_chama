@@ -153,8 +153,49 @@ export const updateSystemConfig = async (req: Request, res: Response) => {
   }
 };
 
+export const updateMember = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name, email, phone, role, payout_number, balance, expectedDaily } = req.body;
+    
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ error: 'Member not found' });
+
+    if (name !== undefined) user.name = name;
+    if (email !== undefined) user.email = email;
+    if (phone !== undefined) user.phone = phone;
+    if (role !== undefined) user.role = role;
+    if (payout_number !== undefined) user.payout_number = payout_number;
+    if (balance !== undefined) user.balance = balance;
+    if (expectedDaily !== undefined) user.expectedDaily = expectedDaily;
+
+    await user.save();
+    res.json({ message: 'Member updated successfully', user });
+  } catch (error) {
+    console.error('updateMember error:', error);
+    res.status(500).json({ error: 'Failed to update member' });
+  }
+};
+
+export const deleteMember = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    // We expect the mongo _id here
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ error: 'Member not found' });
+    
+    await User.findByIdAndDelete(id);
+    // Also delete their transactions? requested specifically for "deletion and confirmation for members"
+    // Usually we keep records, but if the user wants true deletion we could.
+    // For now stick to user deletion.
+    res.json({ message: 'Member deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete member' });
+  }
+};
+
 export const approveManualDeposit = async (req: Request, res: Response) => {
-  const { transactionId, status } = req.body; // status: 'completed' | 'failed'
+  const { transactionId, status, rejectionReason, approvedAmount } = req.body; // status: 'completed' | 'failed'
   try {
     const transaction = await Transaction.findById(transactionId);
     if (!transaction || transaction.type !== 'manual_deposit') {
@@ -165,15 +206,26 @@ export const approveManualDeposit = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Transaction already processed' });
     }
 
+    // If admin provided a different amount, update it
+    const finalAmount = approvedAmount !== undefined ? Number(approvedAmount) : transaction.amount;
+    transaction.amount = finalAmount;
     transaction.status = status;
     await transaction.save();
 
     if (status === 'completed') {
       const user = await User.findOne({ userId: transaction.userId });
       if (user) {
-        user.balance += transaction.amount;
+        user.balance += finalAmount;
         await user.save();
-        await sendWhatsAppMessage(user.phone, `Your manual deposit of ${transaction.amount} KES has been approved. New balance: ${user.balance} KES.`);
+        await sendWhatsAppMessage(user.phone, `Your manual deposit of ${finalAmount} KES has been approved. New balance: ${user.balance} KES.`);
+      }
+    } else {
+      const user = await User.findOne({ userId: transaction.userId });
+      if (user) {
+        const message = rejectionReason 
+          ? `Your manual deposit of ${transaction.amount} KES has been rejected. REASON: ${rejectionReason}. Please contact the administrator for more details.`
+          : `Your manual deposit of ${transaction.amount} KES has been rejected. Please contact the administrator for more details.`;
+        await sendWhatsAppMessage(user.phone, message);
       }
     }
 

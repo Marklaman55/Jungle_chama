@@ -1,14 +1,52 @@
-import React from 'react';
-import { motion } from 'motion/react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ShieldCheck, Zap, Heart, Sparkles, MessageSquare, Share2, Phone } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Zap, Heart, Sparkles, MessageSquare, Share2, Phone, ShoppingBag, Package, Loader2, ShoppingCart, CheckCircle2 } from 'lucide-react';
+
+import { useCart } from '../context/CartContext';
 
 const Home: React.FC = () => {
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { addToCart } = useCart();
+  const [notification, setNotification] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/products')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setProducts(data.slice(0, 3));
+        } else {
+          console.error('Expected array of products, got:', data);
+          setProducts([]);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, []);
+
   return (
     <div className="overflow-hidden atmosphere-gradient min-h-screen">
       {/* Hero Section */}
       <section className="relative pt-32 pb-40 px-4">
         <div className="max-w-7xl mx-auto text-center relative z-10">
+          <AnimatePresence>
+            {notification && (
+              <motion.div
+                initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] bg-white border border-green-100 text-green-600 px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl flex items-center gap-3"
+              >
+                <CheckCircle2 size={16} />
+                {notification}
+              </motion.div>
+            )}
+          </AnimatePresence>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -41,16 +79,140 @@ const Home: React.FC = () => {
                 to="/products"
                 className="w-full sm:w-auto px-12 py-6 bg-white text-black border border-gray-100 rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-gray-50 transition-all flex items-center justify-center gap-3 shadow-xl shadow-black/5"
               >
-                View Collection
+                Explore Shop
               </Link>
             </div>
           </motion.div>
         </div>
 
-        {/* Decorative elements */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none -z-10">
           <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-jungle/10 rounded-full blur-[120px] animate-pulse" />
           <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[100px]" />
+        </div>
+      </section>
+
+      {/* Marketplace Section */}
+      <section className="py-32 px-4 relative bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
+            <div>
+              <div className="inline-flex items-center gap-2 px-6 py-2 bg-jungle/10 text-jungle rounded-full text-[10px] font-black uppercase tracking-widest mb-6">
+                <ShoppingBag size={14} />
+                Marketplace Preview
+              </div>
+              <h2 className="text-4xl md:text-7xl font-display uppercase tracking-tight leading-[0.9] text-black">
+                Community <br /> <span className="text-jungle">Marketplace.</span>
+              </h2>
+            </div>
+            <Link 
+              to="/products" 
+              className="group inline-flex items-center gap-2 text-black font-black text-xs uppercase tracking-[0.2em] hover:text-jungle transition-colors"
+            >
+              Shop All Products <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            {loading ? (
+              [...Array(3)].map((_, i) => (
+                <div key={i} className="bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden flex flex-col h-full">
+                  <div className="aspect-square skeleton"></div>
+                  <div className="p-8 space-y-4">
+                    <div className="h-6 w-3/4 skeleton rounded-lg"></div>
+                    <div className="h-3 w-full skeleton rounded-md"></div>
+                    <div className="flex justify-between items-center pt-4">
+                      <div className="h-3 w-20 skeleton rounded-md"></div>
+                      <div className="h-10 w-10 skeleton rounded-xl"></div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : products.length > 0 ? (
+              products.map((product) => (
+                <Link 
+                  key={product.id}
+                  to="/products"
+                  className="group bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden hover:shadow-[0_40px_80px_rgba(0,0,0,0.06)] transition-all duration-700 flex flex-col h-full"
+                >
+                  <div className="aspect-square bg-gray-50 relative overflow-hidden flex items-center justify-center">
+                    {product.image_url ? (
+                      <img 
+                        src={product.image_url} 
+                        alt={product.name} 
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-100 text-6xl font-black uppercase tracking-tighter">{product.name.charAt(0)}</div>
+                    )}
+                    <div className="absolute top-6 right-6 px-4 py-2 bg-white/90 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase tracking-widest text-black shadow-xl border border-white/20">
+                      KES {product.price}
+                    </div>
+                  </div>
+                  <div className="p-8 flex flex-col flex-1">
+                    <h3 className="text-xl font-black text-black mb-2 tracking-tight line-clamp-1 uppercase group-hover:text-jungle transition-colors">{product.name}</h3>
+                    <p className="text-gray-400 text-xs font-medium line-clamp-2 leading-relaxed mb-8 flex-1">{product.description}</p>
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-2 text-jungle font-black text-[10px] uppercase tracking-widest group-hover:gap-4 transition-all">
+                        View Product <ArrowRight size={14} />
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          addToCart(product);
+                          setNotification(`${product.name.toUpperCase()} added to cart!`);
+                          setTimeout(() => setNotification(null), 3000);
+                        }}
+                        className="p-3 bg-black text-white rounded-xl hover:bg-jungle transition-all shadow-xl shadow-black/5 active:scale-95 group/btn"
+                      >
+                        <ShoppingCart size={16} className="group-hover/btn:scale-110 transition-transform" />
+                      </button>
+                    </div>
+                  </div>
+                </Link>
+              ))
+            ) : (
+              <>
+                <div className="bg-gray-50 p-10 rounded-[3rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-700 md:col-span-2 group">
+                  <div className="flex flex-col lg:flex-row gap-12 items-center">
+                    <div className="flex-1">
+                      <h3 className="text-3xl font-black text-black tracking-tight mb-4 uppercase">Trade within the tribe</h3>
+                      <p className="text-gray-500 font-medium leading-relaxed mb-10">
+                        Join a trusted ecosystem where members buy and sell high-quality items using their chama payouts or direct balances.
+                      </p>
+                      <div className="flex flex-wrap gap-4">
+                        {['Secured Payments', 'Member Vetted', 'Fast Delivery'].map(tag => (
+                          <span key={tag} className="px-4 py-2 bg-white text-gray-400 border border-gray-100 rounded-xl text-[10px] font-black uppercase tracking-widest">{tag}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="w-full lg:w-72 aspect-square bg-white rounded-[2rem] overflow-hidden relative shadow-inner">
+                      <div className="absolute inset-0 bg-jungle/5 flex items-center justify-center">
+                        <Package size={80} className="text-jungle opacity-20 group-hover:scale-110 transition-transform duration-700" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-black text-white p-10 rounded-[3rem] flex flex-col justify-between relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-jungle/20 rounded-full blur-3xl pointer-events-none"></div>
+                  <div>
+                    <h3 className="text-2xl font-black tracking-tight mb-4 uppercase">Direct <br /> Delivery</h3>
+                    <p className="text-white/40 text-sm font-medium leading-relaxed">
+                      Get your rewards delivered directly to your doorstep after every cycle maturity.
+                    </p>
+                  </div>
+                  <div className="mt-12">
+                    <div className="w-16 h-16 bg-jungle text-white rounded-2xl flex items-center justify-center mb-6 shadow-xl shadow-jungle/20">
+                      <Sparkles size={32} />
+                    </div>
+                    <Link to="/products" className="text-jungle font-black text-xs uppercase tracking-widest hover:underline">Explore Collection</Link>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </section>
 

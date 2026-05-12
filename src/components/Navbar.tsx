@@ -1,11 +1,13 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, ShoppingBag, User, LogOut, ShieldCheck, Menu, X } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, User, LogOut, ShieldCheck, Menu, X, ShoppingCart } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useCart } from '../context/CartContext';
 
 const Navbar: React.FC = () => {
   const { isAuthenticated, isAdmin, logout, user } = useAuth();
+  const { totalItems } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -54,29 +56,43 @@ const Navbar: React.FC = () => {
               </Link>
             ))}
             
-            {isAuthenticated ? (
-              <div className="flex items-center gap-4 ml-6 pl-6 border-l border-gray-100">
+            <div className="flex items-center gap-4 ml-6 pl-6 border-l border-gray-100">
+              {!isAdmin && totalItems > 0 && (
                 <Link 
-                  to="/profile"
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-jungle hover:text-white hover:border-jungle transition-all group"
+                  to="/dashboard"
+                  className="relative p-3 text-gray-400 hover:text-jungle hover:bg-jungle/5 rounded-2xl transition-all"
                 >
-                  <User size={14} className="text-jungle group-hover:text-white" />
-                  <span className="text-xs font-black uppercase tracking-widest">{user?.name}</span>
+                  <ShoppingCart size={20} />
+                  <span className="absolute top-1 right-1 w-5 h-5 bg-jungle text-white text-[9px] font-black flex items-center justify-center rounded-full shadow-lg border-2 border-white">
+                    {totalItems}
+                  </span>
                 </Link>
-                <button
-                  onClick={handleLogout}
-                  className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all"
-                  title="Logout"
-                >
-                  <LogOut size={18} />
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-4 ml-6">
-                <Link to="/login" className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black px-4">Login</Link>
-                <Link to="/register" className="px-8 py-3 bg-black text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-jungle transition-all shadow-xl shadow-black/10">Join Now</Link>
-              </div>
-            )}
+              )}
+              
+              {isAuthenticated ? (
+                <>
+                  <Link 
+                    to="/profile"
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-jungle hover:text-white hover:border-jungle transition-all group"
+                  >
+                    <User size={14} className="text-jungle group-hover:text-white" />
+                    <span className="text-xs font-black uppercase tracking-widest">{user?.name}</span>
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all"
+                    title="Logout"
+                  >
+                    <LogOut size={18} />
+                  </button>
+                </>
+              ) : (
+                <div className="flex items-center gap-4">
+                  <Link to="/login" className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black px-4">Login</Link>
+                  <Link to="/register" className="px-8 py-3 bg-black text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-jungle transition-all shadow-xl shadow-black/10">Join Now</Link>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Mobile menu button */}
@@ -112,6 +128,21 @@ const Navbar: React.FC = () => {
                   {item.name}
                 </Link>
               ))}
+              {!isAdmin && totalItems > 0 && (
+                <Link
+                  to="/dashboard"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center justify-between px-4 py-3 text-base font-medium text-jungle bg-jungle/5 rounded-xl border border-jungle/10"
+                >
+                  <div className="flex items-center gap-3">
+                    <ShoppingCart size={20} />
+                    View Cart
+                  </div>
+                  <span className="bg-jungle text-white px-2 py-0.5 rounded-full text-xs font-black">
+                    {totalItems}
+                  </span>
+                </Link>
+              )}
               {isAuthenticated ? (
                 <button
                   onClick={() => { handleLogout(); setIsMenuOpen(false); }}
