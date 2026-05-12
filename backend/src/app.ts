@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs';
 import multer from 'multer';
@@ -13,7 +14,7 @@ import PaymentRoutes from './routes/PaymentRoutes';
 import WebhookRoutes from './routes/WebhookRoutes';
 import { startCron } from './cron/DailyCron';
 
-const __dirname = path.dirname(__filename);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const uploadsDir = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadsDir)) {
@@ -55,7 +56,7 @@ const createApp = async () => {
 
   if (process.env.ENABLE_WHATSAPP !== 'false') {
     try {
-      const { initWhatsApp } = require('./services/WhatsAppService');
+      const { initWhatsApp } = await import('./services/WhatsAppService');
       await initWhatsApp();
     } catch (err) {
       console.warn('WhatsApp service disabled or unavailable in this environment');
