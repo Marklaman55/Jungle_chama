@@ -63,6 +63,17 @@ const createApp = async () => {
     }
   }
 
+  // API health endpoint (database check)
+  app.get('/api/health', async (req, res) => {
+    try {
+      const mongoose = await import('mongoose');
+      await mongoose.connection.db.admin().ping();
+      res.status(200).json({ status: 'ok', database: 'connected' });
+    } catch (err) {
+      res.status(503).json({ status: 'error', database: 'disconnected' });
+    }
+  });
+
   app.use('/api/auth', AuthRoutes);
   app.use('/api/member', MemberRoutes);
   app.use('/api/admin', AdminRoutes);
