@@ -5,7 +5,7 @@ services:
     plan: starter
     rootDir: backend
     healthCheckPath: /health
-    buildCommand: rm -rf backend/dist && npm install && npm run build
+    buildCommand: cd backend && rm -rf dist node_modules && npm install && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
