@@ -13,13 +13,10 @@ import MemberRoutes from './routes/MemberRoutes';
 import PaymentRoutes from './routes/PaymentRoutes';
 import WebhookRoutes from './routes/WebhookRoutes';
 import { startCron } from './cron/DailyCron';
-import { initWhatsApp } from './services/WhatsAppService';
-import { config } from './config/env';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Cloudinary is configured in server.ts if needed
 const uploadsDir = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
@@ -57,7 +54,15 @@ const createApp = async () => {
   await connectDatabase();
 
   startCron();
-  await initWhatsApp();
+
+  try {
+    const { initWhatsApp } = await import('./services/WhatsAppService');
+    if (process.env.ENABLE_WHATSAPP !== 'false') {
+      await initWhatsApp();
+    }
+  } catch (err) {
+    console.warn('WhatsApp service disabled or unavailable in this environment');
+  }
 
   app.use('/api/auth', AuthRoutes);
   app.use('/api/member', MemberRoutes);
