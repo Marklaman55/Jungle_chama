@@ -37,6 +37,12 @@ const upload = multer({
 const createApp = async () => {
   const app = express();
 
+  // Health endpoint for Render (must be before all middleware)
+  app.get('/health', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.status(200).send('{"status":"ok"}');
+  });
+
   app.use(cors(corsOptions));
   
   app.use((req, res, next) => {

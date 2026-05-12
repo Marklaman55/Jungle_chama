@@ -1,5 +1,4 @@
 import createApp from './app.js';
-import mongoose from 'mongoose';
 import User from './models/User.js';
 import SystemConfig from './models/SystemConfig.js';
 import bcrypt from 'bcrypt';
@@ -8,20 +7,6 @@ import { v4 as uuidv4 } from 'uuid';
 const startServer = async () => {
   const app = await createApp();
   const PORT = process.env.PORT || 3000;
-
-  // Health endpoint for Render
-  app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok' });
-  });
-
-  app.get('/api/health', async (req, res) => {
-    try {
-      await mongoose.connection.db.admin().ping();
-      res.status(200).json({ status: 'ok', database: 'connected' });
-    } catch (err) {
-      res.status(503).json({ status: 'error', database: 'disconnected' });
-    }
-  });
 
   try {
     const adminExists = await User.findOne({ role: 'admin' });
