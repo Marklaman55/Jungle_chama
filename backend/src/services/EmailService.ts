@@ -14,10 +14,17 @@ const transporter = nodemailer.createTransport({
 
 export const sendOTPEmail = async (email: string, otp: string) => {
   const mailOptions = {
-    from: `"Security Verification" <${config.email.user}>`,
+    from: `"Jungle Chama" <${config.email.user}>`,
     to: email,
     subject: 'Your Login Verification Code',
-    html: `...`, // Email template preserved from original
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #00D100;">Your Verification Code</h2>
+        <p>Your verification code is: <strong style="font-size: 24px;">${otp}</strong></p>
+        <p>This code will expire in 10 minutes.</p>
+        <p><a href="https://jungle-chama.vercel.app/login" style="background: #00D100; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Go to Login</a></p>
+      </div>
+    `,
   };
 
   try {
@@ -31,10 +38,17 @@ export const sendOTPEmail = async (email: string, otp: string) => {
 
 export const sendResetEmail = async (email: string, otp: string) => {
   const mailOptions = {
-    from: `"Security Verification" <${config.email.user}>`,
+    from: `"Jungle Chama" <${config.email.user}>`,
     to: email,
     subject: 'Your Password Reset Code',
-    html: `...`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #00D100;">Password Reset Code</h2>
+        <p>Your reset code is: <strong style="font-size: 24px;">${otp}</strong></p>
+        <p>This code will expire in 10 minutes.</p>
+        <p><a href="https://jungle-chama.vercel.app/login" style="background: #00D100; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Go to Login</a></p>
+      </div>
+    `,
   };
 
   try {
@@ -50,7 +64,13 @@ export const sendWelcomeEmail = async (email: string, name: string) => {
     from: `"Jungle Chama" <${config.email.user}>`,
     to: email,
     subject: 'Welcome to Jungle Chama!',
-    html: `...`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #00D100;">Welcome ${name}!</h2>
+        <p>Thank you for joining Jungle Chama. Start saving and earning rewards today!</p>
+        <p><a href="https://jungle-chama.vercel.app/dashboard" style="background: #00D100; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Go to Dashboard</a></p>
+      </div>
+    `,
   };
 
   try {

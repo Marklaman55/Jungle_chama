@@ -13,6 +13,8 @@ services:
         value: 10000
       - key: ENABLE_WHATSAPP
         value: "false"
+      - key: FRONTEND_URL
+        value: https://jungle-chama.vercel.app
       - key: MONGO_URI
         fromSecret: MONGO_URI
       - key: JWT_SECRET
