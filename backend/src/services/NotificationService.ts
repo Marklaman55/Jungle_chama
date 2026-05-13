@@ -80,8 +80,11 @@ export const sendWelcomeNotifications = async (email: string, phone: string, nam
   `;
 
   await sendEmailNotification(email, subject, message, html);
-  await sendSMSNotification(phone, message);
-  await sendWhatsAppMessage(phone, message);
+  // SMS and WhatsApp sent non-blocking in background
+  if (phone) {
+    sendSMSNotification(phone, message).catch(() => {});
+    sendWhatsAppMessage(phone, message).catch(() => {});
+  }
 };
 
 export const sendPaymentConfirmation = async (email: string, phone: string, name: string, amount: number, newBalance: number) => {
@@ -124,6 +127,8 @@ export const sendVerificationOTP = async (email: string, phone: string, otp: str
   `;
 
   await sendEmailNotification(email, subject, message, html);
-  await sendSMSNotification(phone, message);
-  await sendWhatsAppMessage(phone, message);
+  // SMS sent separately (non-blocking)
+  if (phone && sendSMSNotification) {
+    sendSMSNotification(phone, message).catch(() => {});
+  }
 };
