@@ -153,8 +153,8 @@ const createApp = async () => {
         });
       };
 
-      const result = await streamUpload(req);
-      res.json({ url: result.secure_url, resource_type: result.resource_type });
+const result: { secure_url?: string; resource_type?: string } = await streamUpload(req);
+       res.json({ url: result.secure_url, resource_type: result.resource_type });
     } catch (error) {
       console.error('Cloudinary Upload Error:', error);
       res.status(500).json({ error: error.message || 'Failed to upload to Cloudinary' });

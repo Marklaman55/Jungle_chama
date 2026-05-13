@@ -439,3 +439,62 @@ export const processCyclePayout = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to process cycle payout' });
   }
 };
+
+export const updateMemberBalance = async (req: Request, res: Response) => {
+  const { userId, amount } = req.body;
+  try {
+    const user = await User.findOne({ userId });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    user.balance += Number(amount);
+    await user.save();
+
+    const transaction = new Transaction({
+      userId: user.userId,
+      amount: Number(amount),
+      transactionId: `MANUAL-${Date.now()}`,
+      type: 'deposit',
+      status: 'completed',
+      description: 'Manual administrator deposit',
+      date: new Date()
+    });
+    await transaction.save();
+
+    res.json({ message: 'Balance updated', newBalance: user.balance });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update balance' });
+  }
+};
+
+export const triggerMemberStkPush = async (req: Request, res: Response) => {
+  const { userId, amount } = req.body;
+  try {
+    const user = await User.findOne({ userId });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const phone = user.phone;
+    const protocol = req.headers['x-forwarded-proto'] || 'https';
+    const host = req.headers['x-forwarded-host'] || req.headers.host;
+    const currentBaseUrl = `${protocol}://${host}`;
+    const response = await initiateStkPush(phone, amount, user.userId, currentBaseUrl);
+
+    const transaction = new Transaction({
+      userId: user.userId,
+      amount: amount,
+      transactionId: response.CheckoutRequestID || `STK-${Date.now()}`,
+      mpesa_checkout_id: response.CheckoutRequestID,
+      type: 'deposit',
+      status: 'pending',
+      description: 'Admin requested STK Push',
+      date: new Date()
+    });
+    await transaction.save();
+
+    await sendWhatsAppMessage(phone, `Administrator has requested a payment of ${amount} KES. Please check your phone for the M-Pesa prompt.`);
+
+    res.json({ message: 'STK Push initiated', response });
+  } catch (error) {
+    console.error('Error triggering member STK push:', error);
+    res.status(500).json({ error: 'Failed to initiate STK Push' });
+  }
+};

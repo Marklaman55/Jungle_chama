@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, ShieldCheck, Zap, Heart, Sparkles, MessageSquare, Share2, Phone, ShoppingBag, Package, Loader2, ShoppingCart, CheckCircle2 } from 'lucide-react';
 
 import { useCart } from '../context/CartContext';
+import { apiFetch } from '../lib/api';
 
 const Home: React.FC = () => {
   const [products, setProducts] = useState<any[]>([]);
@@ -12,7 +13,7 @@ const Home: React.FC = () => {
   const [notification, setNotification] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/products')
+    apiFetch('/api/products')
       .then(res => {
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         return res.json();
