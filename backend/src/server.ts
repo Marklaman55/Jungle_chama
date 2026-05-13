@@ -1,14 +1,15 @@
 import createApp from './app.js';
 import User from './models/User.js';
 import SystemConfig from './models/SystemConfig.js';
-import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
+import bcrypt from 'bcrypt';
 
 const startServer = async () => {
   const app = await createApp();
   const PORT = process.env.PORT || 3000;
 
   try {
+    // Bootstrap Admin User if not exists
     const adminExists = await User.findOne({ role: 'admin' });
     if (!adminExists) {
       const hashedPassword = await bcrypt.hash('Admin@Jungle2024', 10);
@@ -25,6 +26,13 @@ const startServer = async () => {
       console.log('Default admin user created: admin@junglechama.com / Admin@Jungle2024');
     }
 
+    // Also ensure the current user is an admin for convenience
+    await User.findOneAndUpdate(
+      { email: 'vincentkamau179@gmail.com' },
+      { role: 'admin' }
+    );
+
+    // Initialize SystemConfig if it doesn't exist
     const config = await SystemConfig.findOne();
     if (!config) {
       await new SystemConfig({
