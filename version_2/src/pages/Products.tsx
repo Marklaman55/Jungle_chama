@@ -247,7 +247,7 @@ const Products: React.FC = () => {
             <p className="text-gray-400 font-black uppercase tracking-widest text-sm">No products available at the moment.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-12">
             {products.map((product) => (
               <motion.div
                 key={product._id || product.id}
@@ -287,18 +287,50 @@ const Products: React.FC = () => {
                       <span className="px-6 py-2 bg-white text-black font-black uppercase tracking-widest text-xs rounded-full">Out of Stock</span>
                     </div>
                   )}
+                  {/* name overlay for mobile */}
+                  <div className="absolute bottom-4 left-4 right-4 sm:hidden pointer-events-none">
+                    <p className="text-white font-black text-lg uppercase tracking-tight drop-shadow-lg leading-tight line-clamp-2">
+                      {product.name}
+                    </p>
+                  </div>
                 </div>
-                <div className="p-10">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-2xl font-black text-black tracking-tight">{product.name}</h3>
-                    <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
+                <div className="p-10 hidden sm:block">
+                  <div className="flex items-center justify-between mb-2">
+                    <button 
+                      onClick={() => {
+                        setSelectedProduct(product);
+                        setShowProductDetails(true);
+                      }}
+                      className="text-2xl font-black text-black tracking-tight hover:text-jungle transition-colors text-left"
+                    >
+                      {product.name}
+                    </button>
+                    <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest whitespace-nowrap">
                       Stock: {product.stock}
                     </span>
                   </div>
+                  
+                  {product.trackerId && (
+                    <div className="flex items-center gap-1.5 mb-4 group/trk">
+                      <span className="text-[8px] font-black text-gray-300 uppercase tracking-tighter">REF:</span>
+                      <span className="text-[9px] font-mono font-bold text-gray-400 group-hover/trk:text-jungle transition-colors">{product.trackerId}</span>
+                    </div>
+                  )}
+
                   <p className="text-gray-400 text-sm mb-10 line-clamp-2 leading-relaxed font-medium">
                     {product.description}
                   </p>
                   <div className="flex flex-col gap-3">
+                    <button 
+                      onClick={() => {
+                        setSelectedProduct(product);
+                        setShowProductDetails(true);
+                      }}
+                      className="w-full py-4 bg-gray-50 text-black rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-100 transition-all flex items-center justify-center gap-2 border border-gray-100 mb-2 sm:hidden"
+                    >
+                      <ArrowRight size={14} /> View Product
+                    </button>
+
                     {payoutOrder && (
                       <button 
                         onClick={() => handleRedeem(product.id)}
@@ -484,6 +516,18 @@ const Products: React.FC = () => {
                         <p className="text-lg font-black text-black leading-none">Jungle Item</p>
                       </div>
                     </div>
+
+                    {selectedProduct.trackerId && (
+                      <div className="p-4 bg-black/5 rounded-2xl border border-black/5 flex items-center justify-between">
+                        <div>
+                          <p className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] mb-0.5">Product Tracker ID</p>
+                          <p className="text-xs font-mono font-bold text-black">{selectedProduct.trackerId}</p>
+                        </div>
+                        <div className="w-8 h-8 rounded-full bg-jungle/10 flex items-center justify-center">
+                          <CheckCircle2 size={14} className="text-jungle" />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

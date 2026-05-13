@@ -113,15 +113,23 @@ export const verifyOtp = async (req: Request, res: Response) => {
 export const register = async (req: Request, res: Response) => {
   const { name, email, password, phone, termsAccepted } = req.body;
   try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ error: 'Email already registered.' });
+    let normalizedEmail = email.toLowerCase().trim();
+    if (normalizedEmail.endsWith('@gmail.com')) {
+      const [localPart] = normalizedEmail.split('@');
+      // Remove all dots and ignore everything after '+'
+      const basePart = localPart.split('+')[0].replace(/\./g, '');
+      normalizedEmail = `${basePart}@gmail.com`;
+    }
+
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) return res.status(400).json({ error: 'This Gmail address is already associated with an account. Registration blocked to prevent duplicates.' });
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const userId = uuidv4().slice(0, 8).toUpperCase();
 
     const user = new User({
         name,
-        email,
+        email: normalizedEmail,
         password: hashedPassword,
         phone,
         userId,

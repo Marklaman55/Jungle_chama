@@ -115,7 +115,7 @@ const Home: React.FC = () => {
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-6 sm:gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-10">
             {loading ? (
               [...Array(3)].map((_, i) => (
                 <div key={i} className="bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden flex flex-col h-full">
@@ -148,11 +148,17 @@ const Home: React.FC = () => {
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-100 text-6xl font-black uppercase tracking-tighter">{product.name.charAt(0)}</div>
                     )}
+                    {/* name overlay for mobile */}
+                    <div className="absolute bottom-4 left-6 right-6 sm:hidden pointer-events-none">
+                      <p className="text-white font-black text-xl uppercase tracking-tight drop-shadow-lg leading-tight line-clamp-1">
+                        {product.name}
+                      </p>
+                    </div>
                     <div className="absolute top-6 right-6 px-4 py-2 bg-white/90 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase tracking-widest text-black shadow-xl border border-white/20">
                       KES {product.price}
                     </div>
                   </div>
-                  <div className="p-8 flex flex-col flex-1">
+                  <div className="p-8 flex flex-col flex-1 hidden sm:flex">
                     <h3 className="text-xl font-black text-black mb-2 tracking-tight line-clamp-1 uppercase group-hover:text-jungle transition-colors">{product.name}</h3>
                     <p className="text-gray-400 text-xs font-medium line-clamp-2 leading-relaxed mb-8 flex-1">{product.description}</p>
                     <div className="flex items-center justify-between gap-4">

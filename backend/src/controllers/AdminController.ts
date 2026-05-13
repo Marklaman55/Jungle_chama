@@ -28,7 +28,11 @@ export const getProducts = async (req: Request, res: Response) => {
 
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const product = new Product(req.body);
+    const data = { ...req.body };
+    if (!data.trackerId) {
+      data.trackerId = `TRK-${uuidv4().slice(0, 8).toUpperCase()}`;
+    }
+    const product = new Product(data);
     await product.save();
     res.status(201).json(product);
   } catch (error) {
@@ -38,7 +42,10 @@ export const createProduct = async (req: Request, res: Response) => {
 
 export const updateProduct = async (req: Request, res: Response) => {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const { name, description, image_url, video_url, media, stock, price, status, isGlobal, trackerId } = req.body;
+    const product = await Product.findByIdAndUpdate(req.params.id, {
+      name, description, image_url, video_url, media, stock, price, status, isGlobal, trackerId
+    }, { new: true });
     res.json(product);
   } catch (error) {
     res.status(500).json({ error: 'Failed to update product' });

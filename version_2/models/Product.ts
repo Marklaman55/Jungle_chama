@@ -14,6 +14,7 @@ const ProductSchema = new mongoose.Schema({
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'approved' },
   creatorId: { type: String, ref: 'User' },
   isGlobal: { type: Boolean, default: true },
+  trackerId: { type: String, unique: true, sparse: true },
 }, { 
   timestamps: true,
   toJSON: {
