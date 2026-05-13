@@ -125,13 +125,17 @@ export const register = async (req: Request, res: Response) => {
         const expiresAt = new Date(Date.now() + 10 * 60000);
         await new OTP({ email, otp: hashedOtp, expiresAt }).save();
 
-        if (phone) {
-          await sendWhatsAppMessage(phone, `Welcome to Jungle Chama! Your verification code is: ${otpCode}`);
-        }
+if (phone) {
+           sendWhatsAppMessage(phone, `Welcome to Jungle Chama! Your verification code is: ${otpCode}`).catch(err =>
+             console.warn('WhatsApp send failed during registration:', err.message)
+           );
+         }
 
-        await sendWelcomeEmail(email, name);
+         sendWelcomeEmail(email, name).catch(err =>
+           console.warn('Welcome email send failed:', err.message)
+         );
 
-        res.status(201).json({ message: 'Registration initiated. Please verify your phone number.', email });
+         res.status(201).json({ message: 'Registration initiated. Please verify your phone number.', email });
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }
@@ -153,9 +157,11 @@ export const forgotPassword = async (req: Request, res: Response) => {
     await OTP.deleteMany({ email });
     await new OTP({ email, otp: hashedOtp, expiresAt }).save();
   
-    if (user.phone) {
-      await sendWhatsAppMessage(user.phone, `Your Jungle Chama password reset code is: ${otpCode}. Valid for 10 minutes.`);
-    }
+if (user.phone) {
+       sendWhatsAppMessage(user.phone, `Your Jungle Chama password reset code is: ${otpCode}. Valid for 10 minutes.`).catch(err =>
+         console.warn('WhatsApp send failed during forgot password:', err.message)
+       );
+     }
 
     res.json({ message: 'Password reset code sent to your email.' });
   } catch (error: any) {
