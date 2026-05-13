@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs';
 import multer from 'multer';
+import mongoose from 'mongoose';
 import { connectDatabase } from './config/database.js';
 import { corsOptions } from './config/cors.js';
 import { errorMiddleware } from './middleware/ErrorMiddleware.js';
@@ -84,6 +85,14 @@ const createApp = async () => {
     } catch (err) {
       res.status(503).json({ status: 'error', database: 'disconnected' });
     }
+  });
+
+  // Database guard middleware - returns 503 if DB is not connected
+  app.use('/api', async (req, res, next) => {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ status: 'error', database: 'disconnected' });
+    }
+    next();
   });
 
   app.use('/api/auth', AuthRoutes);
