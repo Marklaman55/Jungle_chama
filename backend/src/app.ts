@@ -73,8 +73,12 @@ const createApp = async () => {
   app.get('/api/health', async (req, res) => {
     try {
       const mongoose = await import('mongoose');
-      await mongoose.connection.db.admin().ping();
-      res.status(200).json({ status: 'ok', database: 'connected' });
+      if (mongoose.connection.db) {
+        await mongoose.connection.db.admin().ping();
+        res.status(200).json({ status: 'ok', database: 'connected' });
+      } else {
+        res.status(503).json({ status: 'error', database: 'disconnected' });
+      }
     } catch (err) {
       res.status(503).json({ status: 'error', database: 'disconnected' });
     }
