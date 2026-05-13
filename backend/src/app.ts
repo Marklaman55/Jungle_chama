@@ -76,7 +76,6 @@ const createApp = async () => {
   // API health endpoint (database check)
   app.get('/api/health', async (req, res) => {
     try {
-      const mongoose = await import('mongoose');
       if (mongoose.connection.readyState === 1) {
         res.status(200).json({ status: 'ok', database: 'connected' });
       } else {
