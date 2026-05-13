@@ -17,9 +17,10 @@ export const connectDatabase = async (): Promise<typeof mongoose> => {
 
 const dbOptions = {
      dbName: 'jungle_chama',
-     serverSelectionTimeoutMS: 30000,
-     connectTimeoutMS: 30000,
-     maxPoolSize: 10,
+     serverSelectionTimeoutMS: 5000,
+     connectTimeoutMS: 5000,
+     socketTimeoutMS: 5000,
+     maxPoolSize: 5,
    };
 
   mongoose.set('bufferCommands', true);
