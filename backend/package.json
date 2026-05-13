@@ -5,6 +5,7 @@
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
     "build": "rm -rf dist && tsc",
+    "prestart": "rm -rf dist && tsc",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
