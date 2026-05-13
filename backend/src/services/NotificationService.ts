@@ -1,9 +1,6 @@
 import nodemailer from 'nodemailer';
 import twilio from 'twilio';
-import dotenv from 'dotenv';
 import { sendWhatsAppMessage } from './WhatsAppService.js';
-
-dotenv.config();
 
 // Standard Email Configuration
 const transporter = nodemailer.createTransport({

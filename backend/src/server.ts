@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import createApp from './app.js';
 import User from './models/User.js';
 import SystemConfig from './models/SystemConfig.js';

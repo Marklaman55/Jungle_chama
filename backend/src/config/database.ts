@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
 
-dotenv.config();
+// dotenv is loaded in app.ts via import 'dotenv/config'
 
 const MONGO_URI = process.env.MONGO_URI;
 
