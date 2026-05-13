@@ -15,11 +15,12 @@ export const connectDatabase = async (): Promise<typeof mongoose> => {
   const censoredUri = connectionString.replace(/:([^@]+)@/, ':****@');
   console.log(`Connecting to MongoDB Atlas Cluster: ${censoredUri}`);
 
-  const dbOptions = {
-    dbName: 'jungle_chama',
-    serverSelectionTimeoutMS: 10000,
-    connectTimeoutMS: 15000,
-  };
+const dbOptions = {
+     dbName: 'jungle_chama',
+     serverSelectionTimeoutMS: 30000,
+     connectTimeoutMS: 30000,
+     maxPoolSize: 10,
+   };
 
   mongoose.set('bufferCommands', true);
 
