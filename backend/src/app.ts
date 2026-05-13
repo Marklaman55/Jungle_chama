@@ -60,14 +60,14 @@ const createApp = async () => {
 
   startCron();
 
-  if (process.env.ENABLE_WHATSAPP !== 'false') {
-    try {
-      const { initWhatsApp } = await import('./services/WhatsAppService.js');
-      await initWhatsApp();
-    } catch (err) {
-      console.warn('WhatsApp service disabled or unavailable in this environment');
-    }
-  }
+if (process.env.ENABLE_WHATSAPP === 'true') {
+     try {
+       const { initWhatsApp } = await import('./services/WhatsAppService.js');
+       await initWhatsApp();
+     } catch (err) {
+       console.warn('WhatsApp service disabled or unavailable in this environment');
+     }
+   }
 
   // API health endpoint (database check)
   app.get('/api/health', async (req, res) => {

@@ -12,8 +12,10 @@ services:
         value: production
       - key: PORT
         value: 10000
-      - key: ENABLE_WHATSAPP
-        value: "false"
+- key: ENABLE_WHATSAPP
+         value: "false"
+       - key: WHATSAPP_VERIFY_TOKEN
+         value: "jungle_chama_token"
       - key: FRONTEND_URL
         value: https://jungle-chama.vercel.app
       - key: MONGO_URI
