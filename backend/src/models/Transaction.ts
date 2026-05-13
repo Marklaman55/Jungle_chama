@@ -4,7 +4,7 @@ export interface ITransaction extends Document {
   userId: string;
   amount: number;
   transactionId: string;
-  type: 'deposit' | 'payout' | 'purchase' | 'manual_deposit' | 'payment';
+  type: 'deposit' | 'payout' | 'purchase' | 'manual_deposit';
   status: 'pending' | 'completed' | 'failed';
   date: Date;
   description?: string;
@@ -16,7 +16,7 @@ const TransactionSchema: Schema = new Schema({
   userId: { type: String, required: true, ref: 'User' },
   amount: { type: Number, required: true },
   transactionId: { type: String, required: true, unique: true },
-  type: { type: String, enum: ['deposit', 'payout', 'purchase', 'manual_deposit', 'payment'], required: true },
+  type: { type: String, enum: ['deposit', 'payout', 'purchase', 'manual_deposit'], required: true },
   status: { type: String, enum: ['pending', 'completed', 'failed'], default: 'pending' },
   date: { type: Date, default: Date.now },
   description: { type: String },

@@ -89,7 +89,7 @@ export const buyProduct = async (req: Request, res: Response) => {
     }
 
     if (((product.stock as number) || 0) <= 0) {
-        return res.status(400).json({ error: 'Product out of stock' });
+      return res.status(400).json({ error: 'Product out of stock' });
     }
 
     user.balance -= ((product.price as number) || 0);
@@ -99,13 +99,13 @@ export const buyProduct = async (req: Request, res: Response) => {
     await product.save();
 
     const transaction = new Transaction({
-        userId: user.userId,
-        amount: product.price,
-        transactionId: `BUY-${Date.now()}`,
-        type: 'purchase',
-        status: 'completed',
-        date: new Date(),
-        description: `Purchased ${product.name}`
+      userId: user.userId,
+      amount: product.price,
+      transactionId: `BUY-${Date.now()}`,
+      type: 'purchase',
+      status: 'completed',
+      date: new Date(),
+      description: `Purchased ${product.name}`
     });
     await transaction.save();
 
@@ -134,7 +134,7 @@ export const sendDailyReminders = async (req: Request, res: Response) => {
     for (const user of unpaidUsers) {
       if (user.phone) {
         const message = `Hello ${user.name}, this is a reminder from Jungle Chama. Please top up your account to maintain your cycle position. Minimum required: ${config?.cycleDay} KES. Your current balance: ${user.balance} KES.`;
-        await sendWhatsAppMessage(user.phone, message);
+        sendWhatsAppMessage(user.phone, message).catch(() => {});
         sentCount++;
       }
     }
@@ -244,7 +244,7 @@ export const approveProduct = async (req: Request, res: Response) => {
     const product = await Product.findById(productId);
     if (!product) return res.status(404).json({ error: 'Product not found' });
 
-    product.status = status;
+    product.status = status as any;
     await product.save();
 
     res.json({ message: `Product ${status}`, product });

@@ -42,7 +42,7 @@ const Admin: React.FC = () => {
   const [sendingReminders, setSendingReminders] = useState(false);
   const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
   
-  const [newProduct, setNewProduct] = useState<any>({ name: '', description: '', image_url: '', video_url: '', media: [], stock: 10, price: 1000 });
+  const [newProduct, setNewProduct] = useState<any>({ name: '', description: '', image_url: '', video_url: '', media: [], stock: 10, price: 1000, trackerId: '' });
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [editingMember, setEditingMember] = useState<any>(null);
   const [whatsappStatus, setWhatsappStatus] = useState<{ qr: string | null, isReady: boolean } | null>(null);

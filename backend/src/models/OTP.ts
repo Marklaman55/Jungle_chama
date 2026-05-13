@@ -18,7 +18,6 @@ const OTPSchema: Schema = new Schema({
   isUsed: { type: Boolean, default: false },
 });
 
-// Index to automatically delete expired OTPs
 OTPSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export default mongoose.model<IOTP>('OTP', OTPSchema);

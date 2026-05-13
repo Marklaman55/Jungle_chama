@@ -42,36 +42,37 @@ const AppContent = () => {
     <Router>
       <div className="min-h-screen bg-white">
         <Navbar />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/products" element={<Products />} />
-          <Route
-            path="/dashboard"
-            element={
-              <PrivateRoute>
-                <Dashboard />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              <PrivateRoute adminOnly>
-                <Admin />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <PrivateRoute>
-                <Profile />
-              </PrivateRoute>
-            }
-          />
-        </Routes>
+<Routes>
+           <Route path="/" element={<Home />} />
+           <Route path="/login" element={<Login />} />
+           <Route path="/register" element={<Register />} />
+           <Route path="/products" element={<Products />} />
+           <Route
+             path="/dashboard"
+             element={
+               <PrivateRoute>
+                 <Dashboard />
+               </PrivateRoute>
+             }
+           />
+           <Route
+             path="/admin"
+             element={
+               <PrivateRoute adminOnly>
+                 <Admin />
+               </PrivateRoute>
+             }
+           />
+           <Route
+             path="/profile"
+             element={
+               <PrivateRoute>
+                 <Profile />
+               </PrivateRoute>
+             }
+           />
+           <Route path="*" element={<Navigate to="/" />} />
+         </Routes>
       </div>
     </Router>
   );

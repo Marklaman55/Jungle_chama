@@ -287,11 +287,16 @@ const Products: React.FC = () => {
                       <span className="px-6 py-2 bg-white text-black font-black uppercase tracking-widest text-xs rounded-full">Out of Stock</span>
                     </div>
                   )}
-                  {/* name overlay for mobile */}
-                  <div className="absolute bottom-4 left-4 right-4 sm:hidden pointer-events-none">
-                    <p className="text-white font-black text-lg uppercase tracking-tight drop-shadow-lg leading-tight line-clamp-2">
-                      {product.name}
-                    </p>
+                  {/* name overlay for mobile with better legibility */}
+                  <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/80 via-black/20 to-transparent sm:hidden pointer-events-none">
+                    <div className="flex items-end justify-between gap-2">
+                      <p className="text-white font-black text-xl uppercase tracking-tight leading-tight line-clamp-2">
+                        {product.name}
+                      </p>
+                      <div className="w-10 h-10 rounded-full bg-jungle flex items-center justify-center shrink-0 shadow-lg">
+                        <ArrowRight size={18} className="text-white" />
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div className="p-10 hidden sm:block">

@@ -148,11 +148,16 @@ const Home: React.FC = () => {
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-100 text-6xl font-black uppercase tracking-tighter">{product.name.charAt(0)}</div>
                     )}
-                    {/* name overlay for mobile */}
-                    <div className="absolute bottom-4 left-6 right-6 sm:hidden pointer-events-none">
-                      <p className="text-white font-black text-xl uppercase tracking-tight drop-shadow-lg leading-tight line-clamp-1">
-                        {product.name}
-                      </p>
+                    {/* name overlay for mobile with better legibility */}
+                    <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/80 via-black/20 to-transparent sm:hidden pointer-events-none">
+                      <div className="flex items-end justify-between gap-2">
+                        <p className="text-white font-black text-xl uppercase tracking-tight leading-tight line-clamp-1">
+                          {product.name}
+                        </p>
+                        <div className="w-8 h-8 rounded-full bg-jungle flex items-center justify-center shrink-0 shadow-lg">
+                          <ArrowRight size={14} className="text-white" />
+                        </div>
+                      </div>
                     </div>
                     <div className="absolute top-6 right-6 px-4 py-2 bg-white/90 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase tracking-widest text-black shadow-xl border border-white/20">
                       KES {product.price}

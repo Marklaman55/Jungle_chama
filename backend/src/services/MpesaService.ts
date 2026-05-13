@@ -1,58 +1,22 @@
 import axios from 'axios';
-import dotenv from 'dotenv';
 import { config } from '../config/env.js';
-
-dotenv.config();
 
 const consumerKey = config.mpesa.consumerKey;
 const consumerSecret = config.mpesa.consumerSecret;
 const shortcode = config.mpesa.shortcode;
 const passkey = config.mpesa.passkey;
 const baseUrl = config.baseUrl;
+const callbackUrlEnv = config.mpesa.callbackUrl;
 
-const useSandbox = config.mpesa.env !== 'production';
-
-const MPESA_BASE = useSandbox
-  ? 'https://sandbox.safaricom.co.ke'
-  : 'https://api.safaricom.co.ke';
-
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-const fetchWithRetry = async (url: string, reqConfig: any, retries = 3, delay = 1000) => {
-  for (let i = 0; i < retries; i++) {
-    try {
-      return await axios.get(url, reqConfig);
-    } catch (error: any) {
-      if (i === retries - 1) throw error;
-      console.warn(`M-Pesa request failed (attempt ${i + 1}/${retries}), retrying in ${delay}ms...`);
-      await sleep(delay);
-    }
-  }
-  throw new Error('All retries failed');
-};
-
-const postWithRetry = async (url: string, data: any, reqConfig: any, retries = 3, delay = 1000) => {
-  for (let i = 0; i < retries; i++) {
-    try {
-      return await axios.post(url, data, reqConfig);
-    } catch (error: any) {
-      if (i === retries - 1) throw error;
-      console.warn(`M-Pesa POST request failed (attempt ${i + 1}/${retries}), retrying in ${delay}ms...`);
-      await sleep(delay);
-    }
-  }
-  throw new Error('All retries failed');
-};
-
-export const getAccessToken = async (): Promise<string> => {
+export const getAccessToken = async () => {
     const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64');
     try {
-        const response = await fetchWithRetry(`${MPESA_BASE}/oauth/v1/generate?grant_type=client_credentials`, {
+        const response = await axios.get('https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials', {
             headers: {
                 Authorization: `Basic ${auth}`,
             },
         });
-        return response!.data.access_token;
+        return response.data.access_token;
     } catch (error: any) {
         console.error('Error getting M-Pesa token:', error.response?.data || error.message);
         throw error;
@@ -86,20 +50,24 @@ export const initiateStkPush = async (phone: string, amount: number, accountRefe
     const password = Buffer.from(`${shortcode}${passkey}${timestamp}`).toString('base64');
     const formattedPhone = formatPhone(phone);
 
-    let finalCallbackUrl = config.mpesa.callbackUrl || '';
-    
+    // Prioritize MPESA_CALLBACK_URL from env, but validate it's not for a different deployment
+    let finalCallbackUrl = callbackUrlEnv;
+
+    // If the callback URL is from a different environment, auto-detect instead
     if (finalCallbackUrl && finalCallbackUrl.includes('run.app') && baseUrlOverride && !finalCallbackUrl.includes(baseUrlOverride.split('//')[1].split('.')[0])) {
-        console.warn(`Provided MPESA_CALLBACK_URL (${finalCallbackUrl}) seems to belong to another app. Overriding with current base: ${baseUrlOverride}`);
-        finalCallbackUrl = '';
+        console.warn(`Provided MPESA_CALLBACK_URL seems to belong to another app. Overriding with current base.`);
+        finalCallbackUrl = null;
     }
 
     if (!finalCallbackUrl) {
         let base = baseUrlOverride || baseUrl || 'https://junglechama.com';
-        if (!base.startsWith('http')) {
-            base = `https://${base}`;
-        }
+        if (!base.startsWith('http')) base = `https://${base}`;
         base = base.replace(/\/+$/, '');
         finalCallbackUrl = `${base}/api/mpesa/callback`;
+    }
+
+    if (finalCallbackUrl.includes('localhost') || finalCallbackUrl.includes('127.0.0.1')) {
+        console.warn('CRITICAL: M-Pesa CallBackURL contains localhost. Safaricom will reject this.');
     }
 
     console.log(`Using M-Pesa CallBackURL: ${finalCallbackUrl}`);
@@ -121,14 +89,13 @@ export const initiateStkPush = async (phone: string, amount: number, accountRefe
     console.log('Sending STK Push Data to Safaricom:', JSON.stringify({ ...data, Password: '***' }, null, 2));
 
     try {
-        const response = await postWithRetry(`${MPESA_BASE}/mpesa/stkpush/v1/processrequest`, 
+        const response = await axios.post('https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest',
             data, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
         });
-
-        return response?.data || { error: 'No response' };
+        return response.data;
     } catch (error: any) {
         console.error('Error initiating STK push:', error.response?.data || error.message);
         throw error;
@@ -140,8 +107,8 @@ export const initiateB2BPayout = async (phone: string, amount: number, remarks: 
     const formattedPhone = formatPhone(phone);
 
     const data = {
-        InitiatorName: process.env.MPESA_INITIATOR_NAME || "testapi", 
-        SecurityCredential: process.env.MPESA_SECURITY_CREDENTIAL || "your_encoded_credential",
+        InitiatorName: config.mpesa.initiatorName || "testapi",
+        SecurityCredential: config.mpesa.securityCredential || "your_encoded_credential",
         CommandID: "BusinessPayment",
         Amount: amount,
         PartyA: shortcode,
@@ -153,17 +120,15 @@ export const initiateB2BPayout = async (phone: string, amount: number, remarks: 
     };
 
     try {
-        const response = await postWithRetry(`${MPESA_BASE}/mpesa/b2c/v1/paymentrequest`, 
+        const response = await axios.post('https://sandbox.safaricom.co.ke/mpesa/b2c/v1/paymentrequest',
             data, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
         });
-        return response?.data || { error: 'No response' };
+        return response.data;
     } catch (error: any) {
         console.error('Error initiating B2B payout:', error.response?.data || error.message);
         throw error;
     }
 };
-
-export { getAccessToken as getToken };
