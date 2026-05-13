@@ -86,6 +86,12 @@ const createApp = async () => {
     }
   });
 
+  // Keepalive endpoint to prevent Render sleep
+  app.get('/keepalive', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.status(200).send('{"status":"alive"}');
+  });
+
   // Database guard middleware - returns 503 if DB is not connected
   app.use('/api', async (req, res, next) => {
     if (mongoose.connection.readyState !== 1) {

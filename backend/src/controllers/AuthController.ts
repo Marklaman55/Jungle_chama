@@ -107,7 +107,7 @@ export const register = async (req: Request, res: Response) => {
         const existingUser = await User.findOne({ email });
         if (existingUser) return res.status(400).json({ error: 'Email already registered.' });
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 8);
         const userId = uuidv4().slice(0, 8).toUpperCase();
 
         const user = new User({
@@ -121,24 +121,25 @@ export const register = async (req: Request, res: Response) => {
         await user.save();
 
         const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-        const hashedOtp = await bcrypt.hash(otpCode, 10);
-        const expiresAt = new Date(Date.now() + 10 * 60000);
-        await new OTP({ email, otp: hashedOtp, expiresAt }).save();
+const hashedOtp = await bcrypt.hash(otpCode, 4);
 
-if (phone) {
-           sendWhatsAppMessage(phone, `Welcome to Jungle Chama! Your verification code is: ${otpCode}`).catch(err =>
-             console.warn('WhatsApp send failed during registration:', err.message)
-           );
-         }
+    const expiresAt = new Date(Date.now() + 10 * 60000);
+    await new OTP({ email, otp: hashedOtp, expiresAt }).save();
 
-         sendWelcomeEmail(email, name).catch(err =>
-           console.warn('Welcome email send failed:', err.message)
-         );
-
-         res.status(201).json({ message: 'Registration initiated. Please verify your phone number.', email });
-    } catch (error: any) {
-        res.status(500).json({ error: error.message });
+    if (phone) {
+      sendWhatsAppMessage(phone, `Welcome to Jungle Chama! Your verification code is: ${otpCode}`).catch(err =>
+        console.warn('WhatsApp send failed during registration:', err.message)
+      );
     }
+
+    sendWelcomeEmail(email, name).catch(err =>
+      console.warn('Welcome email send failed:', err.message)
+    );
+
+    res.status(201).json({ message: 'Registration initiated. Please verify your phone number.', email });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 };
 
 export const forgotPassword = async (req: Request, res: Response) => {
@@ -151,7 +152,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     }
 
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const hashedOtp = await bcrypt.hash(otpCode, 10);
+    const hashedOtp = await bcrypt.hash(otpCode, 4);
 
     const expiresAt = new Date(Date.now() + 10 * 60000);
     await OTP.deleteMany({ email });
