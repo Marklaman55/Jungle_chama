@@ -56,11 +56,14 @@ const createApp = async () => {
   app.use(express.urlencoded({ extended: true }));
   app.use('/uploads', express.static(uploadsDir));
 
-  await connectDatabase();
+// Connect to MongoDB (non-blocking)
+   connectDatabase().catch(err => {
+     console.warn('MongoDB connection warning (will retry on first request):', err.message);
+   });
 
-  startCron();
+   startCron();
 
-if (process.env.ENABLE_WHATSAPP === 'true') {
+   if (process.env.ENABLE_WHATSAPP === 'true') {
      try {
        const { initWhatsApp } = await import('./services/WhatsAppService.js');
        await initWhatsApp();
