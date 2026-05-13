@@ -4,7 +4,7 @@ import User from '../models/User.js';
 import Transaction from '../models/Transaction.js';
 import SystemConfig from '../models/SystemConfig.js';
 import { v4 as uuidv4 } from 'uuid';
-import { sendWhatsAppMessage } from '../services/WhatsAppService.js';
+import { sendPaymentConfirmation } from '../services/NotificationService.js';
 
 export const triggerStkPush = async (req: Request, res: Response) => {
     const { phone, amount, userId } = req.body;
@@ -23,9 +23,9 @@ export const triggerStkPush = async (req: Request, res: Response) => {
         const protocol = req.headers['x-forwarded-proto'] || 'https';
         const host = req.headers['x-forwarded-host'] || req.headers.host;
         const currentBaseUrl = `${protocol}://${host}`;
-        
+
         const response = await initiateStkPush(phone, amount, userId, currentBaseUrl);
-        
+
         const transaction = new Transaction({
             userId: userId,
             amount: amount,
@@ -61,7 +61,7 @@ export const processB2BPayout = async (req: Request, res: Response) => {
         const payoutAmount = 5000;
 
         const response = await initiateB2BPayout(user.phone, payoutAmount, `Cycle Payout for ${user.name}`);
-        
+
         res.status(200).json({ message: 'B2B Payout initiated', response });
     } catch (error: any) {
         res.status(500).json({ error: error.message });
@@ -106,14 +106,14 @@ export const handleMpesaCallback = async (req: Request, res: Response) => {
             const amount = amountItem ? amountItem.Value : 0;
             const mpesaReceiptNumber = receiptItem ? receiptItem.Value : `AUTO-${Date.now()}`;
             const phone = phoneItem ? phoneItem.Value : '';
-            
+
             let user;
             if (transaction) {
                 user = await User.findOne({ userId: transaction.userId });
             } else if (phone) {
                 user = await User.findOne({ phone: new RegExp(phone.toString().slice(-9)) });
             }
-            
+
             if (user) {
                 const numAmount = Number(amount);
                 user.balance += numAmount;
@@ -139,7 +139,7 @@ export const handleMpesaCallback = async (req: Request, res: Response) => {
                     await newTransaction.save();
                 }
 
-                await sendWhatsAppMessage(user.phone, `Payment of ${numAmount} KES confirmed! Receipt: ${mpesaReceiptNumber}. Your new balance is ${user.balance} KES.`);
+                await sendPaymentConfirmation(user.email, user.phone, user.name, numAmount, user.balance);
             }
         } else {
             console.log(`Payment failed: ${ResultDesc}`);

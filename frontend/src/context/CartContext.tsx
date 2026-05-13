@@ -33,18 +33,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCart(prev => {
       const existing = prev.find(item => item.id === (product._id || product.id));
       if (existing) {
-        return prev.map(item => 
-          item.id === (product._id || product.id) 
-            ? { ...item, quantity: item.quantity + 1 } 
+        return prev.map(item =>
+          item.id === (product._id || product.id)
+            ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       }
-      return [...prev, { 
-        id: (product._id || product.id), 
-        name: product.name, 
-        price: product.price, 
+      return [...prev, {
+        id: (product._id || product.id),
+        name: product.name,
+        price: product.price,
         image_url: product.image_url,
-        quantity: 1 
+        quantity: 1
       }];
     });
   };

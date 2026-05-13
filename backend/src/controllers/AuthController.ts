@@ -3,10 +3,10 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import OTP from '../models/OTP.js';
-import { sendOTPEmail, sendWelcomeEmail } from '../services/EmailService.js';
-import { sendWhatsAppMessage } from '../services/WhatsAppService.js';
+import { sendVerificationOTP, sendWelcomeNotifications } from '../services/NotificationService.js';
 import { v4 as uuidv4 } from 'uuid';
-import { config } from '../config/env.js';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
 
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -27,13 +27,13 @@ export const login = async (req: Request, res: Response) => {
     }
 
     const token = jwt.sign(
-      { id: user._id, userId: user.userId, email: user.email, role: user.role }, 
-      config.jwtSecret, 
+      { id: user._id, userId: user.userId, email: user.email, role: user.role },
+      JWT_SECRET,
       { expiresIn: '1d' }
     );
 
-    res.json({ 
-      message: 'Login successful', 
+    res.json({
+      message: 'Login successful',
       token,
       user: {
         name: user.name,
@@ -83,7 +83,9 @@ export const verifyOtp = async (req: Request, res: Response) => {
     user.isVerified = true;
     await user.save();
 
-    const token = jwt.sign({ id: user._id, userId: user.userId, email: user.email, role: user.role }, config.jwtSecret, { expiresIn: '1d' });
+    await sendWelcomeNotifications(user.email, user.phone, user.name);
+
+    const token = jwt.sign({ id: user._id, userId: user.userId, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
 
     res.json({
       message: 'Login successful',
@@ -102,44 +104,39 @@ export const verifyOtp = async (req: Request, res: Response) => {
 };
 
 export const register = async (req: Request, res: Response) => {
-    const { name, email, password, phone } = req.body;
-    try {
-        const existingUser = await User.findOne({ email });
-        if (existingUser) return res.status(400).json({ error: 'Email already registered.' });
+  const { name, email, password, phone, termsAccepted } = req.body;
+  try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return res.status(400).json({ error: 'Email already registered.' });
 
-        const hashedPassword = await bcrypt.hash(password, 8);
-        const userId = uuidv4().slice(0, 8).toUpperCase();
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const userId = uuidv4().slice(0, 8).toUpperCase();
 
-        const user = new User({
-            name,
-            email,
-            password: hashedPassword,
-            phone,
-            userId,
-        });
+    const user = new User({
+        name,
+        email,
+        password: hashedPassword,
+        phone,
+        userId,
+        termsAccepted: !!termsAccepted,
+        termsAcceptedAt: termsAccepted ? new Date() : undefined
+    });
 
-        await user.save();
+    await user.save();
 
-        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-const hashedOtp = await bcrypt.hash(otpCode, 4);
-
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const hashedOtp = await bcrypt.hash(otpCode, 10);
     const expiresAt = new Date(Date.now() + 10 * 60000);
     await new OTP({ email, otp: hashedOtp, expiresAt }).save();
 
     if (phone) {
-      sendWhatsAppMessage(phone, `Welcome to Jungle Chama! Your verification code is: ${otpCode}`).catch(err =>
-        console.warn('WhatsApp send failed during registration:', err.message)
-      );
+      await sendVerificationOTP(email, phone, otpCode);
     }
 
-    sendWelcomeEmail(email, name).catch(err =>
-      console.warn('Welcome email send failed:', err.message)
-    );
-
     res.status(201).json({ message: 'Registration initiated. Please verify your phone number.', email });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
 };
 
 export const forgotPassword = async (req: Request, res: Response) => {
@@ -152,17 +149,15 @@ export const forgotPassword = async (req: Request, res: Response) => {
     }
 
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const hashedOtp = await bcrypt.hash(otpCode, 4);
+    const hashedOtp = await bcrypt.hash(otpCode, 10);
 
     const expiresAt = new Date(Date.now() + 10 * 60000);
     await OTP.deleteMany({ email });
     await new OTP({ email, otp: hashedOtp, expiresAt }).save();
-  
-if (user.phone) {
-       sendWhatsAppMessage(user.phone, `Your Jungle Chama password reset code is: ${otpCode}. Valid for 10 minutes.`).catch(err =>
-         console.warn('WhatsApp send failed during forgot password:', err.message)
-       );
-     }
+
+    if (user.phone) {
+      await sendVerificationOTP(user.email, user.phone, otpCode);
+    }
 
     res.json({ message: 'Password reset code sent to your email.' });
   } catch (error: any) {

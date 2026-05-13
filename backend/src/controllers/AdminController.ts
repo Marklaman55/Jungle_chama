@@ -3,8 +3,10 @@ import User from '../models/User.js';
 import Transaction from '../models/Transaction.js';
 import SystemConfig from '../models/SystemConfig.js';
 import { sendWhatsAppMessage, getWhatsAppQR } from '../services/WhatsAppService.js';
+import { sendPaymentConfirmation, sendPayoutAlert } from '../services/NotificationService.js';
 import { initiateStkPush, initiateB2BPayout } from '../services/MpesaService.js';
 import { v4 as uuidv4 } from 'uuid';
+
 import Product from '../models/Product.js';
 
 export const getWhatsAppStatus = (req: Request, res: Response) => {
@@ -13,11 +15,14 @@ export const getWhatsAppStatus = (req: Request, res: Response) => {
 };
 
 export const getProducts = async (req: Request, res: Response) => {
+  console.log('[DEBUG] getProducts called');
   try {
     const products = await Product.find();
+    console.log(`[DEBUG] Found ${products.length} products`);
     res.json(products);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch products' });
+  } catch (error: any) {
+    console.error('[DEBUG] getProducts error:', error);
+    res.status(500).json({ error: 'Failed to fetch products', details: error.message });
   }
 };
 
@@ -62,114 +67,44 @@ export const bulkDeleteProducts = async (req: Request, res: Response) => {
   }
 };
 
-export const uploadImage = async (req: Request, res: Response) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
-    res.json({ url: `/uploads/${req.file.filename}` });
-  } catch (error) {
-    res.status(500).json({ error: 'Upload failed' });
-  }
-};
-
 export const buyProduct = async (req: Request, res: Response) => {
+  const { productId, userId } = req.body;
   try {
-    const { productId } = req.body;
-    const user = await User.findOne({ userId: (req as any).user.userId });
-    if (!user) return res.status(404).json({ error: 'User not found' });
-
+    const user = await User.findOne({ userId });
     const product = await Product.findById(productId);
-    if (!product) return res.status(404).json({ error: 'Product not found' });
-    if (product.stock <= 0) return res.status(400).json({ error: 'Product out of stock' });
-    if (user.balance < product.price) return res.status(400).json({ error: 'Insufficient balance' });
 
-    user.balance -= product.price;
-    product.stock -= 1;
+    if (!user || !product) {
+      return res.status(404).json({ error: 'User or Product not found' });
+    }
+
+    if (user.balance < ((product.price as number) || 0)) {
+      return res.status(400).json({ error: 'Insufficient balance' });
+    }
+
+    if (((product.stock as number) || 0) <= 0) {
+        return res.status(400).json({ error: 'Product out of stock' });
+    }
+
+    user.balance -= ((product.price as number) || 0);
     await user.save();
+
+    product.stock = ((product.stock as number) || 1) - 1;
     await product.save();
 
-    await new Transaction({
-      userId: user.userId,
-      amount: product.price,
-      transactionId: `BUY-${Date.now()}`,
-      type: 'deposit',
-      status: 'completed',
-      description: `Bought ${product.name}`,
-      date: new Date(),
-    }).save();
-
-    res.json({ message: 'Product purchased successfully', newBalance: user.balance });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-export const updateCycleOrder = async (req: Request, res: Response) => {
-  try {
-    const { cycleOrder } = req.body;
-    if (!Array.isArray(cycleOrder)) {
-      return res.status(400).json({ error: 'cycleOrder must be an array of userIds' });
-    }
-    const config = await SystemConfig.findOne();
-    if (config) {
-      config.cycleOrder = cycleOrder;
-      config.currentIndex = 0;
-      await config.save();
-      res.json({ message: 'Cycle order updated', config });
-    } else {
-      res.status(404).json({ error: 'System config not found' });
-    }
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-export const processCyclePayout = async (req: Request, res: Response) => {
-  try {
-    const config = await SystemConfig.findOne();
-    if (!config || config.cycleOrder.length === 0) {
-      return res.status(400).json({ error: 'Cycle order not set' });
-    }
-
-    const userId = config.cycleOrder[config.currentIndex];
-    const user = await User.findOne({ userId });
-
-    if (!user) {
-      return res.status(404).json({ error: 'User in cycle not found' });
-    }
-
-    const payoutAmount = 5000;
-
-    try {
-      await initiateB2BPayout(user.phone, payoutAmount, `Cycle Payout Day ${config.cycleDay}`);
-    } catch (mpesaError) {
-      console.error('M-Pesa B2B Error:', mpesaError);
-    }
-
-    user.balance += payoutAmount;
-    await user.save();
-
     const transaction = new Transaction({
-      userId: user.userId,
-      amount: payoutAmount,
-      transactionId: `CYCLE-${Date.now()}`,
-      type: 'payout',
-      status: 'completed',
-      date: new Date(),
-      description: `Cycle Payout Day ${config.cycleDay}`
+        userId: user.userId,
+        amount: product.price,
+        transactionId: `BUY-${Date.now()}`,
+        type: 'purchase',
+        status: 'completed',
+        date: new Date(),
+        description: `Purchased ${product.name}`
     });
     await transaction.save();
 
-    await sendWhatsAppMessage(user.phone, `Congratulations ${user.name}! You have received your cycle payout of ${payoutAmount} KES. Your new balance is ${user.balance} KES.`);
-
-    config.currentIndex = (config.currentIndex + 1) % config.cycleOrder.length;
-    config.cycleDay += 1;
-    await config.save();
-
-    res.json({ message: 'Cycle payout processed', nextUser: config.cycleOrder[config.currentIndex], newDay: config.cycleDay });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.json({ message: 'Purchase successful', newBalance: user.balance });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to complete purchase' });
   }
 };
 
@@ -201,6 +136,113 @@ export const sendDailyReminders = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('sendDailyReminders error:', error);
     res.status(500).json({ error: 'Failed to send reminders' });
+  }
+};
+
+export const updateSystemConfig = async (req: Request, res: Response) => {
+  try {
+    let config = await SystemConfig.findOne();
+    if (!config) {
+      config = new SystemConfig(req.body);
+    } else {
+      Object.assign(config, req.body);
+    }
+    await config.save();
+    res.json(config);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update system config' });
+  }
+};
+
+export const updateMember = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name, email, phone, role, payout_number, balance, expectedDaily } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ error: 'Member not found' });
+
+    if (name !== undefined) user.name = name;
+    if (email !== undefined) user.email = email;
+    if (phone !== undefined) user.phone = phone;
+    if (role !== undefined) user.role = role;
+    if (payout_number !== undefined) user.payout_number = payout_number;
+    if (balance !== undefined) user.balance = balance;
+    if (expectedDaily !== undefined) user.expectedDaily = expectedDaily;
+
+    await user.save();
+    res.json({ message: 'Member updated successfully', user });
+  } catch (error) {
+    console.error('updateMember error:', error);
+    res.status(500).json({ error: 'Failed to update member' });
+  }
+};
+
+export const deleteMember = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ error: 'Member not found' });
+
+    await User.findByIdAndDelete(id);
+    res.json({ message: 'Member deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete member' });
+  }
+};
+
+export const approveManualDeposit = async (req: Request, res: Response) => {
+  const { transactionId, status, rejectionReason, approvedAmount } = req.body;
+  try {
+    const transaction = await Transaction.findById(transactionId);
+    if (!transaction || transaction.type !== 'manual_deposit') {
+      return res.status(404).json({ error: 'Transaction not found or not manual' });
+    }
+
+    if (transaction.status !== 'pending') {
+      return res.status(400).json({ error: 'Transaction already processed' });
+    }
+
+    const finalAmount = approvedAmount !== undefined ? Number(approvedAmount) : transaction.amount;
+    transaction.amount = finalAmount;
+    transaction.status = status;
+    await transaction.save();
+
+    if (status === 'completed') {
+      const user = await User.findOne({ userId: transaction.userId });
+      if (user) {
+        user.balance += finalAmount;
+        await user.save();
+        await sendPaymentConfirmation(user.email, user.phone, user.name, finalAmount, user.balance);
+      }
+    } else {
+      const user = await User.findOne({ userId: transaction.userId });
+      if (user) {
+        const message = rejectionReason
+          ? `Your manual deposit of ${transaction.amount} KES has been rejected. REASON: ${rejectionReason}. Please contact the administrator for more details.`
+          : `Your manual deposit of ${transaction.amount} KES has been rejected. Please contact the administrator for more details.`;
+        await sendWhatsAppMessage(user.phone, message);
+      }
+    }
+
+    res.json({ message: `Transaction marked as ${status}`, transaction });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to process transaction' });
+  }
+};
+
+export const approveProduct = async (req: Request, res: Response) => {
+  const { productId, status } = req.body;
+  try {
+    const product = await Product.findById(productId);
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+
+    product.status = status;
+    await product.save();
+
+    res.json({ message: `Product ${status}`, product });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to process product' });
   }
 };
 
@@ -247,12 +289,12 @@ export const triggerPayout = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'User not found.' });
     }
 
-    user.balance += Number(amount);
+    user.balance += amount;
     await user.save();
 
     const transaction = new Transaction({
       userId: user.userId,
-      amount: Number(amount),
+      amount: amount,
       transactionId: uuidv4(),
       type: 'payout',
       status: 'completed',
@@ -260,7 +302,7 @@ export const triggerPayout = async (req: Request, res: Response) => {
     });
     await transaction.save();
 
-    await sendWhatsAppMessage(user.phone, `Admin has triggered a payout of ${amount} KES to your account.`);
+    await sendPayoutAlert(user.email, user.phone, user.name, amount);
 
     res.status(200).json({ message: 'Payout triggered successfully.', transaction });
   } catch (error) {
@@ -269,61 +311,131 @@ export const triggerPayout = async (req: Request, res: Response) => {
   }
 };
 
-export const updateMemberBalance = async (req: Request, res: Response) => {
-  const { userId, amount } = req.body;
-  try {
-    const user = await User.findOne({ userId });
-    if (!user) return res.status(404).json({ error: 'User not found' });
+export const updateCycleOrder = async (req: Request, res: Response) => {
+  const { cycleOrder } = req.body;
+  if (!Array.isArray(cycleOrder)) {
+    return res.status(400).json({ error: 'cycleOrder must be an array of userIds' });
+  }
 
-    user.balance += Number(amount);
+  try {
+    const config = await SystemConfig.findOne();
+    if (config) {
+      config.cycleOrder = cycleOrder;
+      config.currentIndex = 0;
+      await config.save();
+      res.json({ message: 'Cycle order updated', config });
+    } else {
+      res.status(404).json({ error: 'System config not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update cycle order' });
+  }
+};
+
+export const syncCycleOrder = async (req: Request, res: Response) => {
+  try {
+    const members = await User.find({ role: 'member' }).sort({ payout_number: 1 });
+    const userIds = members.map(m => m.userId);
+
+    let config = await SystemConfig.findOne();
+    if (!config) {
+      config = new SystemConfig({
+        cycleOrder: userIds,
+        currentIndex: 0,
+        cycleDay: 1,
+        systemState: 'active'
+      });
+    } else {
+      config.cycleOrder = userIds;
+      if (config.currentIndex >= userIds.length) {
+        config.currentIndex = 0;
+      }
+    }
+
+    await config.save();
+    res.json({ message: 'Cycle order synced from member positions', count: userIds.length, config });
+  } catch (error) {
+    console.error('syncCycleOrder error:', error);
+    res.status(500).json({ error: 'Failed to sync cycle order' });
+  }
+};
+
+export const advanceCycleManual = async (req: Request, res: Response) => {
+  try {
+    const config = await SystemConfig.findOne();
+    if (!config) return res.status(404).json({ error: 'System config not found' });
+
+    config.cycleDay += 1;
+    await config.save();
+    res.json({ message: `Cycle advanced to Day ${config.cycleDay}`, config });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to advance cycle' });
+  }
+};
+
+export const processCyclePayout = async (req: Request, res: Response) => {
+  try {
+    const config = await SystemConfig.findOne();
+    if (!config || config.cycleOrder.length === 0) {
+      return res.status(400).json({ error: 'Cycle order not set' });
+    }
+
+    const userId = config.cycleOrder[config.currentIndex];
+    const user = await User.findOne({ userId });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User in cycle not found' });
+    }
+
+    const memberCount = await User.countDocuments({ role: 'member' });
+    const payoutAmount = memberCount * 500;
+
+    try {
+        await initiateB2BPayout(user.phone, payoutAmount, `Cycle Payout Day ${config.cycleDay}`);
+    } catch (mpesaError) {
+        console.error('M-Pesa B2B Error:', mpesaError);
+    }
+
+    user.balance += payoutAmount;
     await user.save();
 
     const transaction = new Transaction({
       userId: user.userId,
-      amount: Number(amount),
-      transactionId: `MANUAL-${Date.now()}`,
-      type: 'deposit',
+      amount: payoutAmount,
+      transactionId: `CYCLE-${Date.now()}`,
+      type: 'payout',
       status: 'completed',
-      description: 'Manual administrator deposit',
-      date: new Date()
+      date: new Date(),
+      description: `Cycle Payout Day ${config.cycleDay}`
     });
     await transaction.save();
 
-    res.json({ message: 'Balance updated', newBalance: user.balance });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update balance' });
-  }
-};
+    await sendPayoutAlert(user.email, user.phone, user.name, payoutAmount);
 
-export const triggerMemberStkPush = async (req: Request, res: Response) => {
-  const { userId, amount } = req.body;
-  try {
-    const user = await User.findOne({ userId });
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    const userIds = [...config.cycleOrder];
+    const paidUserId = userIds.splice(config.currentIndex, 1)[0];
+    if (paidUserId) {
+      userIds.push(paidUserId);
+    }
 
-    const phone = user.phone;
-    const protocol = req.headers['x-forwarded-proto'] || 'https';
-    const host = req.headers['x-forwarded-host'] || req.headers.host;
-    const currentBaseUrl = `${protocol}://${host}`;
-    const response = await initiateStkPush(phone, amount, user.userId, currentBaseUrl);
+    config.cycleOrder = userIds;
+    config.currentIndex = 0;
+    config.cycleDay = 1;
+    await config.save();
 
-    const transaction = new Transaction({
-      userId: user.userId,
-      amount: amount,
-      transactionId: response.CheckoutRequestID || `STK-${Date.now()}`,
-      mpesa_checkout_id: response.CheckoutRequestID,
-      type: 'deposit',
-      status: 'pending',
-      description: 'Admin requested STK Push',
-      date: new Date()
+    for (let i = 0; i < userIds.length; i++) {
+      await User.updateOne({ userId: userIds[i] }, { payout_number: i + 1 });
+    }
+
+    res.json({
+      message: 'Cycle payout processed',
+      winnerName: user.name,
+      winnerPosition: user.payout_number,
+      nextUser: config.cycleOrder[0],
+      newDay: config.cycleDay
     });
-    await transaction.save();
-
-    await sendWhatsAppMessage(phone, `Administrator has requested a payment of ${amount} KES. Please check your phone for the M-Pesa prompt.`);
-
-    res.json({ message: 'STK Push initiated', response });
   } catch (error) {
-    console.error('Error triggering member STK push:', error);
-    res.status(500).json({ error: 'Failed to initiate STK Push' });
+    console.error('processCyclePayout error:', error);
+    res.status(500).json({ error: 'Failed to process cycle payout' });
   }
 };

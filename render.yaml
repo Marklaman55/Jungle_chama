@@ -5,7 +5,7 @@ services:
     plan: starter
     rootDir: backend
     healthCheckPath: /health
-    buildCommand: npm prune && npm install && npm run build
+    buildCommand: cd ../frontend && npm install && npm run build -- --outDir ../backend/dist 2>/dev/null || (cd ../backend && npm prune && npm install && npx tsc)
     startCommand: npm start
     envVars:
       - key: NODE_ENV

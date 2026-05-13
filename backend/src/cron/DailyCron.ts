@@ -2,10 +2,12 @@ import cron from 'node-cron';
 import User from '../models/User.js';
 import Transaction from '../models/Transaction.js';
 import SystemConfig from '../models/SystemConfig.js';
+import { sendPayoutAlert, sendSMSNotification } from '../services/NotificationService.js';
 import { sendWhatsAppMessage } from '../services/WhatsAppService.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export const startCron = () => {
+  // Runs daily at midnight
   cron.schedule('0 0 * * *', async () => {
     console.log('Running daily cron job...');
     try {
@@ -20,7 +22,9 @@ export const startCron = () => {
         user.carryForward -= user.expectedDaily;
         if (user.carryForward < 0) {
           console.log(`User ${user.name} is owing: ${user.carryForward}`);
-          await sendWhatsAppMessage(user.phone, `Reminder: You are owing ${Math.abs(user.carryForward)} KES. Please make a payment.`);
+          const msg = `Reminder: You are owing ${Math.abs(user.carryForward)} KES. Please make a payment to maintain your cycle position.`;
+          await sendWhatsAppMessage(user.phone, msg);
+          await sendSMSNotification(user.phone, msg);
         }
         await user.save();
       }
@@ -32,29 +36,36 @@ export const startCron = () => {
         const payoutUser = await User.findOne({ userId: payoutUserId });
 
         if (payoutUser) {
-          const payoutAmount = 1000;
+          const memberCount = await User.countDocuments({ role: 'member' });
+          const payoutAmount = memberCount * 500;
           payoutUser.balance += payoutAmount;
           await payoutUser.save();
 
           const transaction = new Transaction({
             userId: payoutUser.userId,
             amount: payoutAmount,
-            transactionId: uuidv4(),
+            transactionId: `CYCLE-${Date.now()}`,
             type: 'payout',
             status: 'completed',
             date: new Date(),
+            description: `Automated Cycle Payout Day 10`
           });
           await transaction.save();
 
-          await sendWhatsAppMessage(payoutUser.phone, `Congratulations! You have received your payout of ${payoutAmount} KES.`);
+          await sendPayoutAlert(payoutUser.email, payoutUser.phone, payoutUser.name, payoutAmount);
         }
 
-        config.currentIndex += 1;
+        const userIds = [...config.cycleOrder];
+        const paidUserId = userIds.splice(config.currentIndex, 1)[0];
+        if (paidUserId) {
+          userIds.push(paidUserId);
+        }
+        config.cycleOrder = userIds;
+        config.currentIndex = 0;
         config.cycleDay = 1;
 
-        if (config.currentIndex >= config.cycleOrder.length) {
-          config.systemState = 'BREAK';
-          config.currentIndex = 0;
+        for (let i = 0; i < userIds.length; i++) {
+          await User.updateOne({ userId: userIds[i] }, { payout_number: i + 1 });
         }
       }
 
