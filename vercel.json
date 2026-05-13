@@ -1,0 +1,12 @@
+{
+  "projects": [
+    {
+      "dir": "frontend",
+      "framework": "vite"
+    },
+    {
+      "dir": "backend",
+      "framework": "other"
+    }
+  ]
+}
