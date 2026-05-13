@@ -62,44 +62,114 @@ export const bulkDeleteProducts = async (req: Request, res: Response) => {
   }
 };
 
-export const buyProduct = async (req: Request, res: Response) => {
-  const { productId, userId } = req.body;
+export const uploadImage = async (req: Request, res: Response) => {
   try {
-    const user = await User.findOne({ userId });
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    res.json({ url: `/uploads/${req.file.filename}` });
+  } catch (error) {
+    res.status(500).json({ error: 'Upload failed' });
+  }
+};
+
+export const buyProduct = async (req: Request, res: Response) => {
+  try {
+    const { productId } = req.body;
+    const user = await User.findOne({ userId: (req as any).user.userId });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
     const product = await Product.findById(productId);
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+    if (product.stock <= 0) return res.status(400).json({ error: 'Product out of stock' });
+    if (user.balance < product.price) return res.status(400).json({ error: 'Insufficient balance' });
 
-    if (!user || !product) {
-      return res.status(404).json({ error: 'User or Product not found' });
-    }
-
-    if (user.balance < ((product.price as number) || 0)) {
-      return res.status(400).json({ error: 'Insufficient balance' });
-    }
-
-    if (((product.stock as number) || 0) <= 0) {
-        return res.status(400).json({ error: 'Product out of stock' });
-    }
-
-    user.balance -= ((product.price as number) || 0);
+    user.balance -= product.price;
+    product.stock -= 1;
     await user.save();
-
-    product.stock = ((product.stock as number) || 1) - 1;
     await product.save();
 
+    await new Transaction({
+      userId: user.userId,
+      amount: product.price,
+      transactionId: `BUY-${Date.now()}`,
+      type: 'deposit',
+      status: 'completed',
+      description: `Bought ${product.name}`,
+      date: new Date(),
+    }).save();
+
+    res.json({ message: 'Product purchased successfully', newBalance: user.balance });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const updateCycleOrder = async (req: Request, res: Response) => {
+  try {
+    const { cycleOrder } = req.body;
+    if (!Array.isArray(cycleOrder)) {
+      return res.status(400).json({ error: 'cycleOrder must be an array of userIds' });
+    }
+    const config = await SystemConfig.findOne();
+    if (config) {
+      config.cycleOrder = cycleOrder;
+      config.currentIndex = 0;
+      await config.save();
+      res.json({ message: 'Cycle order updated', config });
+    } else {
+      res.status(404).json({ error: 'System config not found' });
+    }
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const processCyclePayout = async (req: Request, res: Response) => {
+  try {
+    const config = await SystemConfig.findOne();
+    if (!config || config.cycleOrder.length === 0) {
+      return res.status(400).json({ error: 'Cycle order not set' });
+    }
+
+    const userId = config.cycleOrder[config.currentIndex];
+    const user = await User.findOne({ userId });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User in cycle not found' });
+    }
+
+    const payoutAmount = 5000;
+
+    try {
+      await initiateB2BPayout(user.phone, payoutAmount, `Cycle Payout Day ${config.cycleDay}`);
+    } catch (mpesaError) {
+      console.error('M-Pesa B2B Error:', mpesaError);
+    }
+
+    user.balance += payoutAmount;
+    await user.save();
+
     const transaction = new Transaction({
-        userId: user.userId,
-        amount: product.price,
-        transactionId: `BUY-${Date.now()}`,
-        type: 'purchase',
-        status: 'completed',
-        date: new Date(),
-        description: `Purchased ${product.name}`
+      userId: user.userId,
+      amount: payoutAmount,
+      transactionId: `CYCLE-${Date.now()}`,
+      type: 'payout',
+      status: 'completed',
+      date: new Date(),
+      description: `Cycle Payout Day ${config.cycleDay}`
     });
     await transaction.save();
 
-    res.json({ message: 'Purchase successful', newBalance: user.balance });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to complete purchase' });
+    await sendWhatsAppMessage(user.phone, `Congratulations ${user.name}! You have received your cycle payout of ${payoutAmount} KES. Your new balance is ${user.balance} KES.`);
+
+    config.currentIndex = (config.currentIndex + 1) % config.cycleOrder.length;
+    config.cycleDay += 1;
+    await config.save();
+
+    res.json({ message: 'Cycle payout processed', nextUser: config.cycleOrder[config.currentIndex], newDay: config.cycleDay });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -177,12 +247,12 @@ export const triggerPayout = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'User not found.' });
     }
 
-    user.balance += amount;
+    user.balance += Number(amount);
     await user.save();
 
     const transaction = new Transaction({
       userId: user.userId,
-      amount: amount,
+      amount: Number(amount),
       transactionId: uuidv4(),
       type: 'payout',
       status: 'completed',
@@ -199,131 +269,61 @@ export const triggerPayout = async (req: Request, res: Response) => {
   }
 };
 
-export const updateCycleOrder = async (req: Request, res: Response) => {
-  const { cycleOrder } = req.body;
-  if (!Array.isArray(cycleOrder)) {
-    return res.status(400).json({ error: 'cycleOrder must be an array of userIds' });
-  }
-
+export const updateMemberBalance = async (req: Request, res: Response) => {
+  const { userId, amount } = req.body;
   try {
-    const config = await SystemConfig.findOne();
-    if (config) {
-      config.cycleOrder = cycleOrder;
-      config.currentIndex = 0;
-      await config.save();
-      res.json({ message: 'Cycle order updated', config });
-    } else {
-      res.status(404).json({ error: 'System config not found' });
-    }
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update cycle order' });
-  }
-};
-
-export const processCyclePayout = async (req: Request, res: Response) => {
-  try {
-    const config = await SystemConfig.findOne();
-    if (!config || config.cycleOrder.length === 0) {
-      return res.status(400).json({ error: 'Cycle order not set' });
-    }
-
-    const userId = config.cycleOrder[config.currentIndex];
     const user = await User.findOne({ userId });
+    if (!user) return res.status(404).json({ error: 'User not found' });
 
-    if (!user) {
-      return res.status(404).json({ error: 'User in cycle not found' });
-    }
-
-    const payoutAmount = 5000;
-
-    try {
-        await initiateB2BPayout(user.phone, payoutAmount, `Cycle Payout Day ${config.cycleDay}`);
-    } catch (mpesaError) {
-        console.error('M-Pesa B2B Error:', mpesaError);
-    }
-
-    user.balance += payoutAmount;
+    user.balance += Number(amount);
     await user.save();
 
     const transaction = new Transaction({
       userId: user.userId,
-      amount: payoutAmount,
-      transactionId: `CYCLE-${Date.now()}`,
-      type: 'payout',
+      amount: Number(amount),
+      transactionId: `MANUAL-${Date.now()}`,
+      type: 'deposit',
       status: 'completed',
-      date: new Date(),
-      description: `Cycle Payout Day ${config.cycleDay}`
+      description: 'Manual administrator deposit',
+      date: new Date()
     });
     await transaction.save();
 
-    await sendWhatsAppMessage(user.phone, `Congratulations ${user.name}! You have received your cycle payout of ${payoutAmount} KES. Your new balance is ${user.balance} KES.`);
-
-    config.currentIndex = (config.currentIndex + 1) % config.cycleOrder.length;
-    config.cycleDay += 1;
-    await config.save();
-
-    res.json({ message: 'Cycle payout processed', nextUser: config.cycleOrder[config.currentIndex], newDay: config.cycleDay });
+    res.json({ message: 'Balance updated', newBalance: user.balance });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to process cycle payout' });
+    res.status(500).json({ error: 'Failed to update balance' });
   }
 };
 
-export const updateMemberBalance = async (req: Request, res: Response) => {
-    const { userId, amount } = req.body;
-    try {
-        const user = await User.findOne({ userId });
-        if (!user) return res.status(404).json({ error: 'User not found' });
-
-        user.balance += Number(amount);
-        await user.save();
-
-        const transaction = new Transaction({
-            userId: user.userId,
-            amount: Number(amount),
-            transactionId: `MANUAL-${Date.now()}`,
-            type: 'deposit',
-            status: 'completed',
-            description: 'Manual administrator deposit',
-            date: new Date()
-        });
-        await transaction.save();
-
-        res.json({ message: 'Balance updated', newBalance: user.balance });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to update balance' });
-    }
-};
-
 export const triggerMemberStkPush = async (req: Request, res: Response) => {
-    const { userId, amount } = req.body;
-    try {
-        const user = await User.findOne({ userId });
-        if (!user) return res.status(404).json({ error: 'User not found' });
+  const { userId, amount } = req.body;
+  try {
+    const user = await User.findOne({ userId });
+    if (!user) return res.status(404).json({ error: 'User not found' });
 
-        const phone = user.phone;
-        console.log('Request Headers for STK Push (Admin):', JSON.stringify(req.headers, null, 2));
-        const protocol = req.headers['x-forwarded-proto'] || 'https';
-        const host = req.headers['x-forwarded-host'] || req.headers.host;
-        const currentBaseUrl = `${protocol}://${host}`;
-        const response = await initiateStkPush(phone, amount, user.userId, currentBaseUrl);
+    const phone = user.phone;
+    const protocol = req.headers['x-forwarded-proto'] || 'https';
+    const host = req.headers['x-forwarded-host'] || req.headers.host;
+    const currentBaseUrl = `${protocol}://${host}`;
+    const response = await initiateStkPush(phone, amount, user.userId, currentBaseUrl);
 
-        const transaction = new Transaction({
-            userId: user.userId,
-            amount: amount,
-            transactionId: response.CheckoutRequestID || `STK-${Date.now()}`,
-            mpesa_checkout_id: response.CheckoutRequestID,
-            type: 'deposit',
-            status: 'pending',
-            description: 'Admin requested STK Push',
-            date: new Date()
-        });
-        await transaction.save();
-        
-        await sendWhatsAppMessage(phone, `Administrator has requested a payment of ${amount} KES. Please check your phone for the M-Pesa prompt.`);
+    const transaction = new Transaction({
+      userId: user.userId,
+      amount: amount,
+      transactionId: response.CheckoutRequestID || `STK-${Date.now()}`,
+      mpesa_checkout_id: response.CheckoutRequestID,
+      type: 'deposit',
+      status: 'pending',
+      description: 'Admin requested STK Push',
+      date: new Date()
+    });
+    await transaction.save();
 
-        res.json({ message: 'STK Push initiated', response });
-    } catch (error) {
-        console.error('Error triggering member STK push:', error);
-        res.status(500).json({ error: 'Failed to initiate STK Push' });
-    }
+    await sendWhatsAppMessage(phone, `Administrator has requested a payment of ${amount} KES. Please check your phone for the M-Pesa prompt.`);
+
+    res.json({ message: 'STK Push initiated', response });
+  } catch (error) {
+    console.error('Error triggering member STK push:', error);
+    res.status(500).json({ error: 'Failed to initiate STK Push' });
+  }
 };

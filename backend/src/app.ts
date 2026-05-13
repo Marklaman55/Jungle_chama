@@ -100,12 +100,13 @@ const createApp = async () => {
     next();
   });
 
-  app.use('/api/auth', AuthRoutes);
-  app.use('/api/member', MemberRoutes);
-  app.use('/api/admin', AdminRoutes);
-  app.use('/api/payment/mpesa', PaymentRoutes);
-  app.use('/api/mpesa', PaymentRoutes);
-  app.use('/api/webhook', WebhookRoutes);
+app.use('/api/auth', AuthRoutes);
+   app.use('/api/member', MemberRoutes);
+   app.use('/api/admin', AdminRoutes);
+   app.use('/api/payment/mpesa', PaymentRoutes);
+   app.use('/api/mpesa', PaymentRoutes);
+   app.use('/api/payments', PaymentRoutes);
+   app.use('/api/webhook', WebhookRoutes);
 
   app.use('/api/*', (req, res) => {
     console.warn(`[API 404] ${req.method} ${req.url}`);

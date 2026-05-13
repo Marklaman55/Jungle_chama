@@ -1,9 +1,9 @@
 import express from 'express';
-import { 
-  getUsers, 
-  getTransactions, 
-  getSystemConfig, 
-  triggerPayout, 
+import {
+  getUsers,
+  getTransactions,
+  getSystemConfig,
+  triggerPayout,
   getWhatsAppStatus,
   getProducts,
   createProduct,
@@ -16,10 +16,14 @@ import {
   updateCycleOrder,
   processCyclePayout,
   updateMemberBalance,
-  triggerMemberStkPush
+  triggerMemberStkPush,
+  uploadImage
 } from '../controllers/AdminController.js';
 import { authMiddleware } from '../middleware/AuthMiddleware.js';
 import { roleMiddleware } from '../middleware/RoleMiddleware.js';
+import multer from 'multer';
+
+const upload = multer({ dest: 'uploads/', limits: { fileSize: 5 * 1024 * 1024 } });
 
 const router = express.Router();
 
@@ -41,6 +45,8 @@ router.post('/products/buy', buyProduct);
 router.put('/products/:id', updateProduct);
 router.delete('/products/bulk', bulkDeleteProducts);
 router.delete('/products/:id', deleteProduct);
+
+router.post('/upload', upload.single('image'), uploadImage);
 
 router.get('/reminders/unpaid', getUnpaidReminders);
 router.post('/reminders/send', sendDailyReminders);
