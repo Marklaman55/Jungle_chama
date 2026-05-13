@@ -13,6 +13,7 @@ import AdminRoutes from './routes/AdminRoutes.js';
 import MemberRoutes from './routes/MemberRoutes.js';
 import PaymentRoutes from './routes/PaymentRoutes.js';
 import WebhookRoutes from './routes/WebhookRoutes.js';
+import { getProducts } from './controllers/AdminController.js';
 import { startCron } from './cron/DailyCron.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -100,9 +101,12 @@ const createApp = async () => {
     next();
   });
 
-app.use('/api/auth', AuthRoutes);
-   app.use('/api/member', MemberRoutes);
-   app.use('/api/admin', AdminRoutes);
+// Top-level products route (used by both Admin and Products pages)
+   app.get('/api/products', getProducts);
+
+   app.use('/api/auth', AuthRoutes);
+    app.use('/api/member', MemberRoutes);
+    app.use('/api/admin', AdminRoutes);
    app.use('/api/payment/mpesa', PaymentRoutes);
    app.use('/api/mpesa', PaymentRoutes);
    app.use('/api/payments', PaymentRoutes);
