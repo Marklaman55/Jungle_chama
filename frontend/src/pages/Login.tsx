@@ -46,7 +46,7 @@ const Login: React.FC = () => {
     setError('');
 
     try {
-      const res = await apiFetch(/api/auth/login, {
+      const res = await apiFetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -72,7 +72,7 @@ const Login: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await apiFetch(/api/auth/forgot-password, {
+      const res = await apiFetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: resetEmail })
@@ -96,7 +96,7 @@ const Login: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await apiFetch(/api/auth/reset-password, {
+      const res = await apiFetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: resetEmail, otp: resetCode, newPassword })

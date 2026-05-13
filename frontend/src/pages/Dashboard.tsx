@@ -65,19 +65,19 @@ const Dashboard: React.FC = () => {
       const headers = { Authorization: `Bearer ${token}` };
 
       // Fetch member stats
-      const statsRes = await apiFetch(/api/member/stats, { headers });
+      const statsRes = await apiFetch('/api/member/stats', { headers });
       if (statsRes.ok) setStats(await statsRes.json());
 
       // Fetch payments
-      const paymentsRes = await apiFetch(/api/payments/my, { headers });
+      const paymentsRes = await apiFetch('/api/payments/my', { headers });
       if (paymentsRes.ok) setPayments(await paymentsRes.json());
       
       // Fetch system config
-      const configRes = await apiFetch(/api/admin/system, { headers });
+      const configRes = await apiFetch('/api/admin/system', { headers });
       if (configRes.ok) setSystemConfig(await configRes.json());
 
       // Fetch user products from public API instead of admin-only
-      const productsRes = await apiFetch(/api/products, { headers });
+      const productsRes = await apiFetch('/api/products', { headers });
       if (productsRes.ok) {
           const allProducts = await productsRes.json();
           setMyProducts(allProducts.filter((p: any) => p.creatorId === user.userId));
@@ -113,7 +113,7 @@ const Dashboard: React.FC = () => {
       let successCount = 0;
       
       for (const item of cart) {
-        const res = await apiFetch(/api/admin/products/buy, {
+        const res = await apiFetch('/api/admin/products/buy', {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -178,7 +178,7 @@ const Dashboard: React.FC = () => {
     try {
       const token = await getToken();
       
-      const res = await apiFetch(/api/payment/mpesa/stk-push, {
+      const res = await apiFetch('/api/payment/mpesa/stk-push', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -219,7 +219,7 @@ const Dashboard: React.FC = () => {
     setPaying(true);
     try {
       const token = await getToken();
-      const res = await apiFetch(/api/member/manual-deposit, {
+      const res = await apiFetch('/api/member/manual-deposit', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -251,7 +251,7 @@ const Dashboard: React.FC = () => {
     formData.append('file', file);
     try {
       const token = await getToken();
-      const res = await apiFetch(/api/admin/upload, {
+      const res = await apiFetch('/api/admin/upload', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData
@@ -285,7 +285,7 @@ const Dashboard: React.FC = () => {
     e.preventDefault();
     try {
       const token = await getToken();
-      const res = await apiFetch(/api/member/products, {
+      const res = await apiFetch('/api/member/products', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

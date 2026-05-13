@@ -291,7 +291,7 @@ This agreement shall serve as digital evidence of acceptance upon registration a
     setError('');
 
     try {
-      const res = await apiFetch(/api/auth/register, {
+      const res = await apiFetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, termsAccepted: true })
@@ -317,7 +317,7 @@ This agreement shall serve as digital evidence of acceptance upon registration a
     setLoading(true);
     setError('');
     try {
-      const res = await apiFetch(/api/auth/verify-otp, {
+      const res = await apiFetch('/api/auth/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: formData.email, otp })

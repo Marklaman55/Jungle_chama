@@ -21,7 +21,7 @@ const Products: React.FC = () => {
       const headers = { Authorization: `Bearer ${token}` };
 
       // Fetch products
-      const productsRes = await apiFetch(/api/products, { headers });
+      const productsRes = await apiFetch('/api/products', { headers });
       if (!productsRes.ok) {
         throw new Error(`HTTP error! status: ${productsRes.status}`);
       }
@@ -37,7 +37,7 @@ const Products: React.FC = () => {
 
       // Fetch pending payout order
       if (user) {
-        const payoutRes = await apiFetch(/api/member/payout-orders/pending, { headers });
+        const payoutRes = await apiFetch('/api/member/payout-orders/pending', { headers });
         const payoutData = await payoutRes.json();
         if (payoutRes.ok && payoutData.length > 0) {
           setPayoutOrder(payoutData[0]);
@@ -61,7 +61,7 @@ const Products: React.FC = () => {
     setRedeeming(true);
     try {
       const token = await getToken();
-      const res = await apiFetch(/api/member/process-payout, {
+      const res = await apiFetch('/api/member/process-payout', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -94,7 +94,7 @@ const Products: React.FC = () => {
     setBuying(productId);
     try {
       const token = await getToken();
-      const res = await apiFetch(/api/admin/products/buy, {
+      const res = await apiFetch('/api/admin/products/buy', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

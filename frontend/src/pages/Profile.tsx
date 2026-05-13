@@ -22,7 +22,7 @@ const Profile: React.FC = () => {
     setSuccess(null);
 
     try {
-      const response = await apiFetch(/api/member/update-profile, {
+      const response = await apiFetch('/api/member/update-profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -59,7 +59,7 @@ const Profile: React.FC = () => {
     formData.append('file', file);
 
     try {
-      const res = await apiFetch(/api/admin/upload, {
+      const res = await apiFetch('/api/admin/upload', {
         method: 'POST',
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         body: formData

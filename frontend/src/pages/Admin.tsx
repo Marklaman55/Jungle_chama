@@ -65,30 +65,30 @@ const Admin: React.FC = () => {
       const headers = { Authorization: `Bearer ${token}` };
 
       // Always fetch system config to keep header updated
-      const sysRes = await apiFetch(/api/admin/system, { headers });
+      const sysRes = await apiFetch('/api/admin/system', { headers });
       if (sysRes.ok) {
         const sysData = await sysRes.json();
         setSystemConfig(sysData);
       }
 
       if (activeTab === 'products') {
-        const res = await apiFetch(/api/products, { headers });
+        const res = await apiFetch('/api/products', { headers });
         const data = await res.json();
         setProducts(data);
       } else if (activeTab === 'members') {
-        const res = await apiFetch(/api/admin/members, { headers });
+        const res = await apiFetch('/api/admin/members', { headers });
         const data = await res.json();
         setMembers(data);
       } else if (activeTab === 'stk') {
-        const res = await apiFetch(/api/admin/transactions, { headers });
+        const res = await apiFetch('/api/admin/transactions', { headers });
         const data = await res.json();
         setTransactions(data.filter((t: any) => t.mpesa_checkout_id));
       } else if (activeTab === 'reminders') {
-        const res = await apiFetch(/api/admin/reminders/unpaid, { headers });
+        const res = await apiFetch('/api/admin/reminders/unpaid', { headers });
         const data = await res.json();
         setUnpaidInfo(data);
       } else if (activeTab === 'whatsapp') {
-        const res = await apiFetch(/api/admin/whatsapp-status, { headers });
+        const res = await apiFetch('/api/admin/whatsapp-status', { headers });
         const data = await res.json();
         setWhatsappStatus(data);
       } else if (activeTab === 'settings') {
@@ -102,7 +102,7 @@ const Admin: React.FC = () => {
           });
         }
       } else if (activeTab === 'approvals') {
-        const res = await apiFetch(/api/admin/transactions, { headers });
+        const res = await apiFetch('/api/admin/transactions', { headers });
         const data = await res.json();
         setPendingDeposits(data.filter((t: any) => t.type === 'manual_deposit' && t.status === 'pending'));
       }
@@ -128,7 +128,7 @@ const Admin: React.FC = () => {
     e.preventDefault();
     try {
       const token = await getToken();
-      const res = await apiFetch(/api/admin/products, {
+      const res = await apiFetch('/api/admin/products', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -155,7 +155,7 @@ const Admin: React.FC = () => {
     
     try {
       const token = await getToken();
-      const res = await apiFetch(/api/admin/products/bulk, {
+      const res = await apiFetch('/api/admin/products/bulk', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -237,7 +237,7 @@ const Admin: React.FC = () => {
     if (!window.confirm('Are you sure you want to process cycle payouts? This will deduct funds and notify winners.')) return;
     try {
       const token = await getToken();
-      const res = await apiFetch(/api/admin/process-cycle-payout, {
+      const res = await apiFetch('/api/admin/process-cycle-payout', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -261,7 +261,7 @@ const Admin: React.FC = () => {
     if (!window.confirm('Sync cycle order based on member payout positions?')) return;
     try {
       const token = await getToken();
-      const res = await apiFetch(/api/admin/cycle/sync, {
+      const res = await apiFetch('/api/admin/cycle/sync', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -281,7 +281,7 @@ const Admin: React.FC = () => {
     if (!window.confirm('Manually advance cycle day?')) return;
     try {
       const token = await getToken();
-      const res = await apiFetch(/api/admin/cycle/advance, {
+      const res = await apiFetch('/api/admin/cycle/advance', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -302,7 +302,7 @@ const Admin: React.FC = () => {
     setSendingReminders(true);
     try {
       const token = await getToken();
-      const res = await apiFetch(/api/admin/reminders/send, {
+      const res = await apiFetch('/api/admin/reminders/send', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -325,7 +325,7 @@ const Admin: React.FC = () => {
 
     try {
       const token = await getToken();
-      const res = await apiFetch(/api/admin/update-balance, {
+      const res = await apiFetch('/api/admin/update-balance', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -351,7 +351,7 @@ const Admin: React.FC = () => {
 
     try {
       const token = await getToken();
-      const res = await apiFetch(/api/admin/trigger-stk, {
+      const res = await apiFetch('/api/admin/trigger-stk', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -375,7 +375,7 @@ const Admin: React.FC = () => {
     e.preventDefault();
     try {
       const token = await getToken();
-      const res = await apiFetch(/api/admin/system, {
+      const res = await apiFetch('/api/admin/system', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -439,7 +439,7 @@ const Admin: React.FC = () => {
 
     try {
       const token = await getToken();
-      const res = await apiFetch(/api/admin/transactions/approve-manual, {
+      const res = await apiFetch('/api/admin/transactions/approve-manual', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -480,7 +480,7 @@ const Admin: React.FC = () => {
   const handleApproveProduct = async (id: string, status: 'approved' | 'rejected') => {
     try {
       const token = await getToken();
-      const res = await apiFetch(/api/admin/products/approve, {
+      const res = await apiFetch('/api/admin/products/approve', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -533,7 +533,7 @@ const Admin: React.FC = () => {
 
     try {
       const token = await getToken();
-      const res = await apiFetch(/api/admin/upload, {
+      const res = await apiFetch('/api/admin/upload', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData
