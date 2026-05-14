@@ -3,7 +3,7 @@ import twilio from 'twilio';
 import { config } from '../config/env.js';
 import { sendWhatsAppMessage } from './WhatsAppService.js';
 
-// Lazy email transporter â€” only created when credentials are available
+// Lazy email transporter — only created when credentials are available
 const getTransporter = () => {
   if (!config.email.user || !config.email.pass) {
     console.warn('[NotificationService] Email credentials missing. Skipping email.');
@@ -89,7 +89,7 @@ export const sendWelcomeNotifications = async (email: string, phone: string, nam
 export const sendPaymentConfirmation = async (email: string, phone: string, name: string, amount: number, newBalance: number) => {
   const subject = 'Payment Confirmation - Jungle Chama';
   const message = `Hello ${name}, your payment of ${amount} KES has been confirmed. Your new balance is ${newBalance} KES. Thank you for saving!`;
-  
+
   await sendEmailNotification(email, subject, message);
   await sendSMSNotification(phone, message);
   await sendWhatsAppMessage(phone, message);
@@ -98,7 +98,7 @@ export const sendPaymentConfirmation = async (email: string, phone: string, name
 export const sendPayoutAlert = async (email: string, phone: string, name: string, amount: number) => {
   const subject = 'Congratulations! You Received a Payout';
   const message = `Hello ${name}, congratulations! You have received your cycle payout of ${amount} KES. The funds have been credited to your account/M-Pesa.`;
-  
+
   await sendEmailNotification(email, subject, message);
   await sendSMSNotification(phone, message);
   await sendWhatsAppMessage(phone, message);

@@ -32,6 +32,4 @@ export const config = {
     apiSecret: process.env.CLOUDINARY_API_SECRET || '',
   },
   baseUrl: process.env.BASE_URL || 'http://localhost:3000',
-  enableWhatsapp: process.env.ENABLE_WHATSAPP === 'true',
-  nodeEnv: process.env.NODE_ENV || 'development',
 };

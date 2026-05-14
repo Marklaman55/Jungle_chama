@@ -3,7 +3,6 @@ const { Client, LocalAuth } = pkg;
 import QRCode from 'qrcode';
 import path from 'path';
 import os from 'os';
-import { config } from '../config/env.js';
 
 let qrCodeData: string | null = null;
 let isReady = false;
@@ -49,6 +48,8 @@ export const initWhatsApp = async () => {
     } catch (error: any) {
         if (error.message && error.message.includes('The browser is already running')) {
             console.warn('WhatsApp browser already running. Attempting to recover...');
+            // In some cases we might just want to wait or log it.
+            // On AI Studio restarts, this can happen if the previous process is still cleaning up.
         } else {
             console.error('Failed to initialize WhatsApp:', error);
         }
@@ -56,9 +57,6 @@ export const initWhatsApp = async () => {
 };
 
 export const getWhatsAppQR = () => {
-    if (!config.enableWhatsapp) {
-        return { qr: null, isReady: false, disabled: true };
-    }
     return { qr: qrCodeData, isReady };
 };
 

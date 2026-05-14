@@ -20,14 +20,13 @@ import { getProducts } from './controllers/AdminController.js';
 import { getMyPayments } from './controllers/MemberController.js';
 import { authMiddleware } from './middleware/AuthMiddleware.js';
 import cloudinary from 'cloudinary';
-import { config } from './config/env.js';
 
 // Configure Cloudinary
-if (config.cloudinary?.cloudName) {
+if (process.env.CLOUDINARY_CLOUD_NAME) {
   cloudinary.v2.config({
-    cloud_name: config.cloudinary.cloudName,
-    api_key: config.cloudinary.apiKey || '',
-    api_secret: config.cloudinary.apiSecret || '',
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY || '',
+    api_secret: process.env.CLOUDINARY_API_SECRET || '',
   });
 }
 
@@ -87,7 +86,7 @@ const createApp = async () => {
   });
 
   // Initialize WhatsApp if enabled (NON-BLOCKING)
-  if (config.enableWhatsapp) {
+  if (process.env.ENABLE_WHATSAPP === 'true') {
     try {
       await initWhatsApp();
     } catch (err) {

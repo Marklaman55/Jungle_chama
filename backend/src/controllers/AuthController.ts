@@ -3,11 +3,10 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import OTP from '../models/OTP.js';
-import { config } from '../config/env.js';
 import { sendVerificationOTP, sendWelcomeNotifications } from '../services/NotificationService.js';
 import { v4 as uuidv4 } from 'uuid';
 
-const JWT_SECRET = config.jwtSecret
+const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
 
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
