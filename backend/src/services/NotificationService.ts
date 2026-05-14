@@ -1,33 +1,35 @@
 import nodemailer from 'nodemailer';
 import twilio from 'twilio';
-import dotenv from 'dotenv';
+import { config } from '../config/env.js';
 import { sendWhatsAppMessage } from './WhatsAppService.js';
 
-dotenv.config();
-
-// Standard Email Configuration
-const transporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE || 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+// Lazy email transporter — only created when credentials are available
+const getTransporter = () => {
+  if (!config.email.user || !config.email.pass) {
+    console.warn('[NotificationService] Email credentials missing. Skipping email.');
+    return null;
+  }
+  return nodemailer.createTransport({
+    service: config.email.service || 'gmail',
+    auth: {
+      user: config.email.user,
+      pass: config.email.pass,
+    },
+  });
+};
 
 // Twilio Configuration
-const twilioClient = process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN
-  ? twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
+const twilioClient = config.twilio?.accountSid && config.twilio?.authToken
+  ? twilio(config.twilio.accountSid, config.twilio.authToken)
   : null;
 
 export const sendEmailNotification = async (to: string, subject: string, text: string, html?: string) => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.warn('[NotificationService] Email credentials missing. Skipping email.');
-    return;
-  }
+  const transporter = getTransporter();
+  if (!transporter) return;
 
   try {
     const mailOptions = {
-      from: `"Jungle Chama" <${process.env.EMAIL_USER}>`,
+      from: `"Jungle Chama" <${config.email.user}>`,
       to,
       subject,
       text,
@@ -41,7 +43,7 @@ export const sendEmailNotification = async (to: string, subject: string, text: s
 };
 
 export const sendSMSNotification = async (to: string, message: string) => {
-  if (!twilioClient || !process.env.TWILIO_PHONE_NUMBER) {
+  if (!twilioClient || !config.twilio?.phoneNumber) {
     console.warn('[NotificationService] Twilio credentials missing. Skipping SMS.');
     return;
   }
@@ -49,7 +51,7 @@ export const sendSMSNotification = async (to: string, message: string) => {
   try {
     const response = await twilioClient.messages.create({
       body: message,
-      from: process.env.TWILIO_PHONE_NUMBER,
+      from: config.twilio.phoneNumber,
       to,
     });
     console.log('[NotificationService] SMS sent:', response.sid);
@@ -70,7 +72,7 @@ export const sendWelcomeNotifications = async (email: string, phone: string, nam
       <p style="font-size: 16px; color: #555;">We are thrilled to have you join Jungle Chama. Your account has been successfully created.</p>
       <p style="font-size: 16px; color: #555;">Start saving today and grow with your community.</p>
       <div style="text-align: center; margin: 30px 0;">
-        <a href="${process.env.VITE_APP_BASE_URL || 'https://junglechama.com'}/login" style="background-color: #00D100; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">Login to Your Dashboard</a>
+        <a href="${config.baseUrl || 'https://junglechama.com'}/login" style="background-color: #00D100; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">Login to Your Dashboard</a>
       </div>
       <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
       <p style="font-size: 12px; color: #aaa; text-align: center;">
@@ -87,7 +89,7 @@ export const sendWelcomeNotifications = async (email: string, phone: string, nam
 export const sendPaymentConfirmation = async (email: string, phone: string, name: string, amount: number, newBalance: number) => {
   const subject = 'Payment Confirmation - Jungle Chama';
   const message = `Hello ${name}, your payment of ${amount} KES has been confirmed. Your new balance is ${newBalance} KES. Thank you for saving!`;
-  
+
   await sendEmailNotification(email, subject, message);
   await sendSMSNotification(phone, message);
   await sendWhatsAppMessage(phone, message);
@@ -96,7 +98,7 @@ export const sendPaymentConfirmation = async (email: string, phone: string, name
 export const sendPayoutAlert = async (email: string, phone: string, name: string, amount: number) => {
   const subject = 'Congratulations! You Received a Payout';
   const message = `Hello ${name}, congratulations! You have received your cycle payout of ${amount} KES. The funds have been credited to your account/M-Pesa.`;
-  
+
   await sendEmailNotification(email, subject, message);
   await sendSMSNotification(phone, message);
   await sendWhatsAppMessage(phone, message);

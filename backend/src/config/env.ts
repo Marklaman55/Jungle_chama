@@ -17,8 +17,14 @@ export const config = {
     securityCredential: process.env.MPESA_SECURITY_CREDENTIAL || '',
   },
   email: {
+    service: process.env.EMAIL_SERVICE || 'gmail',
     user: process.env.EMAIL_USER || '',
     pass: process.env.EMAIL_PASS || '',
+  },
+  twilio: {
+    accountSid: process.env.TWILIO_ACCOUNT_SID || '',
+    authToken: process.env.TWILIO_AUTH_TOKEN || '',
+    phoneNumber: process.env.TWILIO_PHONE_NUMBER || '',
   },
   cloudinary: {
     cloudName: process.env.CLOUDINARY_CLOUD_NAME || '',
