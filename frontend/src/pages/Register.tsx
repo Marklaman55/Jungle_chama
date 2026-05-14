@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Mail, Lock, Phone, ArrowRight, Loader2, Gift, Zap, AlertCircle } from 'lucide-react';
-import { apiFetch } from '../lib/api';
+import { User, Mail, Lock, Phone, ArrowRight, Loader2, Gift, Zap, AlertCircle }
+import { apiFetch } from '../lib/api';;
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -24,141 +24,199 @@ const Register: React.FC = () => {
   const { login } = useAuth();
 
   const termsText = `
-JUNGLE CHAMA PLATFORM
+# JUNGLE CHAMA PLATFORM
 
-TERMS, RULES & REGULATIONS AGREEMENT
+## TERMS, RULES & REGULATIONS AGREEMENT
 
-IMPORTANT NOTICE:
+**IMPORTANT NOTICE:**
 By registering and using the Jungle Chama platform, every member agrees to comply with all rules, regulations, payment obligations, and marketplace conduct policies stated below. This agreement serves as a legally binding digital understanding between the member and Jungle Chama.
 
-1. PLATFORM PURPOSE
+---
+
+# 1. PLATFORM PURPOSE
 
 Jungle Chama is a community savings and marketplace platform where:
-- Members contribute money periodically.
-- Members receive pooled payouts according to agreed schedules.
-- Members can upload, advertise, and sell products to other members.
-- Members participate in a trusted financial and trading ecosystem.
 
-2. MEMBER ELIGIBILITY
+* Members contribute money periodically.
+* Members receive pooled payouts according to agreed schedules.
+* Members can upload, advertise, and sell products to other members.
+* Members participate in a trusted financial and trading ecosystem.
+
+---
+
+# 2. MEMBER ELIGIBILITY
 
 To register on Jungle Chama, a member must:
-- Be at least 18 years old.
-- Provide accurate personal information.
-- Use a valid phone number and email address.
-- Agree to all Jungle Chama rules and regulations.
-- Upload valid identification if requested.
+
+* Be at least 18 years old.
+* Provide accurate personal information.
+* Use a valid phone number and email address.
+* Agree to all Jungle Chama rules and regulations.
+* Upload valid identification if requested.
 
 Providing false information may lead to permanent account suspension.
 
-3. SAVINGS & CONTRIBUTION RULES
+---
 
-3.1 Contribution Obligations
-- Every member must contribute the agreed amount on time.
-- Contributions must be made before the stated deadline.
-- Late payments may attract penalties.
+# 3. SAVINGS & CONTRIBUTION RULES
 
-3.2 Payout Rotation
-Members receive payouts according to the scheduled rotation system.
+## 3.1 Contribution Obligations
 
-3.3 Missed Contributions
+* Every member must contribute the agreed amount on time.
+* Contributions must be made before the stated deadline.
+* Late payments may attract penalties.
+
+## 3.2 Payout Rotation
+
+* Members receive payouts according to the scheduled rotation system.
+* The payout order may be determined by:
+
+  * Registration order,
+  * Voting system,
+  * Random allocation,
+  * Admin approval,
+  * Or agreed chama structure.
+
+## 3.3 Missed Contributions
+
 If a member fails to contribute:
-- Their payout may be delayed.
-- Penalties may apply.
-- Account restrictions may be enforced.
-- Repeated failure may result in removal from the platform.
 
-3.4 Fraud Prevention
-- Fake payments are strictly prohibited.
-- Manipulation of transactions is prohibited.
-- Any fraudulent activity may result in:
+* Their payout may be delayed.
+* Penalties may apply.
+* Account restrictions may be enforced.
+* Repeated failure may result in removal from the platform.
+
+## 3.4 Fraud Prevention
+
+* Fake payments are strictly prohibited.
+* Manipulation of transactions is prohibited.
+* Any fraudulent activity may result in:
+
   * Permanent ban,
   * Legal action,
   * Reporting to authorities.
 
-4. PRODUCT MARKETPLACE RULES
+---
 
-4.1 Product Uploads
+# 4. PRODUCT MARKETPLACE RULES
+
+## 4.1 Product Uploads
+
 Members may upload products for sale, provided that:
-- Products are legal.
-- Product descriptions are accurate.
-- Images belong to the seller or are authorized.
-- Prices are honest and not misleading.
 
-4.2 Prohibited Products
+* Products are legal.
+* Product descriptions are accurate.
+* Images belong to the seller or are authorized.
+* Prices are honest and not misleading.
+
+## 4.2 Prohibited Products
+
 The following are strictly prohibited:
-- Illegal goods,
-- Counterfeit products,
-- Weapons,
-- Drugs,
-- Adult content,
-- Fraudulent services,
-- Stolen property.
+
+* Illegal goods,
+* Counterfeit products,
+* Weapons,
+* Drugs,
+* Adult content,
+* Fraudulent services,
+* Stolen property.
 
 Violation may result in immediate account termination.
 
-4.3 Buyer & Seller Responsibility
-- Sellers are responsible for product quality and delivery.
-- Buyers must verify products before purchase.
-- Jungle Chama acts only as a platform facilitator and is not liable for disputes between buyers and sellers.
+## 4.3 Buyer & Seller Responsibility
 
-5. PAYMENT TERMS
-- All transactions must be completed through approved payment methods.
-- Members must keep proof of payment.
-- Jungle Chama reserves the right to verify any transaction.
+* Sellers are responsible for product quality and delivery.
+* Buyers must verify products before purchase.
+* Jungle Chama acts only as a platform facilitator and is not liable for disputes between buyers and sellers.
+
+---
+
+# 5. PAYMENT TERMS
+
+* All transactions must be completed through approved payment methods.
+* Members must keep proof of payment.
+* Jungle Chama reserves the right to verify any transaction.
 
 Refunds are subject to investigation and approval.
 
-6. ACCOUNT SECURITY
+---
+
+# 6. ACCOUNT SECURITY
+
 Members are responsible for:
-- Keeping passwords secure,
-- Protecting login credentials,
-- Reporting suspicious activity immediately.
+
+* Keeping passwords secure,
+* Protecting login credentials,
+* Reporting suspicious activity immediately.
 
 Jungle Chama is not responsible for losses caused by negligence from the user.
 
-7. MEMBER CONDUCT
+---
+
+# 7. MEMBER CONDUCT
+
 Members must:
-- Treat others respectfully,
-- Avoid abusive language,
-- Avoid scams and manipulation,
-- Avoid impersonation.
+
+* Treat others respectfully,
+* Avoid abusive language,
+* Avoid scams and manipulation,
+* Avoid impersonation.
 
 Harassment, threats, or illegal conduct may lead to removal and legal reporting.
 
-8. ADMINISTRATIVE RIGHTS
+---
+
+# 8. ADMINISTRATIVE RIGHTS
+
 Jungle Chama administrators reserve the right to:
-- Suspend accounts,
-- Investigate suspicious activity,
-- Remove harmful content,
-- Modify platform rules when necessary.
+
+* Suspend accounts,
+* Investigate suspicious activity,
+* Remove harmful content,
+* Modify platform rules when necessary.
 
 Members will be notified of major policy changes.
 
-9. DATA & PRIVACY
+---
+
+# 9. DATA & PRIVACY
+
 By using Jungle Chama, members consent to:
-- Storage of account information,
-- Transaction monitoring for security,
-- Use of data for platform improvements.
+
+* Storage of account information,
+* Transaction monitoring for security,
+* Use of data for platform improvements.
 
 Personal data will not be sold unlawfully to third parties.
 
-10. TERMINATION OF MEMBERSHIP
+---
+
+# 10. TERMINATION OF MEMBERSHIP
+
 A member account may be terminated if:
-- Rules are violated,
-- Fraudulent activity is detected,
-- Payments are repeatedly missed,
-- Illegal conduct occurs.
+
+* Rules are violated,
+* Fraudulent activity is detected,
+* Payments are repeatedly missed,
+* Illegal conduct occurs.
 
 Termination may occur without refund depending on the violation.
 
-11. DIGITAL AGREEMENT CONSENT
+---
+
+# 11. DIGITAL AGREEMENT CONSENT
+
 Before completing registration, members must confirm:
+
 ☑ I have read and understood the Jungle Chama Terms and Regulations.
 ☑ I agree to comply with all platform rules.
 ☑ I understand that violation may result in suspension or removal.
 ☑ I accept digital storage of this agreement as legal evidence.
 
-12. LEGAL ACKNOWLEDGEMENT
+---
+
+# 12. LEGAL ACKNOWLEDGEMENT
+
 This agreement shall serve as digital evidence of acceptance upon registration and may be used in dispute resolution or legal processes where applicable.
   `;
 
@@ -181,7 +239,7 @@ This agreement shall serve as digital evidence of acceptance upon registration a
       ['Terms Accepted', 'Yes'],
       ['Platform', 'Jungle Chama']
     ];
-
+    
     const csvContent = [
       headers.join(','),
       ...data.map(row => row.map(cell => `"${cell}"`).join(','))
@@ -197,21 +255,21 @@ This agreement shall serve as digital evidence of acceptance upon registration a
 
   const validate = () => {
     const errors: Record<string, string> = {};
-
+    
     if (formData.name.trim().length < 3) {
       errors.name = 'Name must be at least 3 characters long';
     }
-
+    
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       errors.email = 'Please enter a valid email address';
     }
-
+    
     const phoneRegex = /^(?:254|\+254|0)?(7|1)\d{8}$/;
     if (!phoneRegex.test(formData.phone)) {
       errors.phone = 'Enter a valid Kenyan number (e.g. 0712345678)';
     }
-
+    
     if (formData.password.length < 6) {
       errors.password = 'Password must be at least 6 characters long';
     }
@@ -226,7 +284,7 @@ This agreement shall serve as digital evidence of acceptance upon registration a
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     if (!validate()) return;
 
     setLoading(true);
@@ -238,7 +296,7 @@ This agreement shall serve as digital evidence of acceptance upon registration a
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, termsAccepted: true })
       });
-
+      
       const data = await res.json();
       if (res.ok) {
         setStep('otp');
@@ -280,19 +338,18 @@ This agreement shall serve as digital evidence of acceptance upon registration a
 
   return (
     <div className="min-h-[calc(100vh-80px)] flex flex-col lg:flex-row bg-white overflow-hidden">
+      {/* Left Side - Visual */}
       <div className="hidden lg:flex lg:w-1/2 bg-black relative items-center justify-center p-20 overflow-hidden">
         <div className="absolute inset-0 opacity-40">
           <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-jungle/40 via-transparent to-transparent" />
-          <img
-            src="https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=2071"
-            alt="Growth"
+          <img 
+            src="https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=2071" 
+            alt="Growth" 
             className="w-full h-full object-cover mix-blend-overlay opacity-50"
             referrerPolicy="no-referrer"
-            loading="lazy"
-            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-          />
+          / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
         </div>
-
+        
         <div className="relative z-10 text-white max-w-lg">
           <motion.div
             initial={{ opacity: 0, x: -30 }}
@@ -306,6 +363,7 @@ This agreement shall serve as digital evidence of acceptance upon registration a
           </motion.div>
         </div>
 
+        {/* Floating element */}
         <motion.div
           animate={{ y: [0, 20, 0] }}
           transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
@@ -315,6 +373,7 @@ This agreement shall serve as digital evidence of acceptance upon registration a
         </motion.div>
       </div>
 
+      {/* Right Side - Form */}
       <div className="flex-1 flex items-center justify-center p-8 sm:p-20 bg-[#F8F9FA]">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -332,7 +391,7 @@ This agreement shall serve as digital evidence of acceptance upon registration a
           </div>
 
           {error && (
-            <motion.div
+            <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               className="mb-8 p-5 bg-red-50 text-red-600 text-sm font-bold rounded-2xl border border-red-100 flex items-center gap-3"
@@ -437,7 +496,7 @@ This agreement shall serve as digital evidence of acceptance upon registration a
               <div className="pt-2">
                 <label className="flex items-start gap-3 cursor-pointer group">
                   <div className="relative mt-1">
-                    <input
+                    <input 
                       type="checkbox"
                       checked={acceptedTerms}
                       onChange={(e) => setAcceptedTerms(e.target.checked)}
@@ -448,10 +507,10 @@ This agreement shall serve as digital evidence of acceptance upon registration a
                     </div>
                   </div>
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-loose">
-                    I AGREE TO THE <button type="button" onClick={() => setShowTerms(true)} className="text-jungle hover:underline">TERMS & REGULATIONS</button>.
+                    I AGREE TO THE <button type="button" onClick={() => setShowTerms(true)} className="text-jungle hover:underline">TERMS & REGULATIONS</button>. 
                     <br />
                     <button type="button" onClick={downloadAgreement} className="text-gray-600 hover:text-black mt-1 flex items-center gap-1">
-                      DOWNLOAD CONFIRMATION (PDF/TXT)
+                       DOWNLOAD CONFIRMATION (PDF/TXT)
                     </button>
                   </span>
                 </label>
@@ -514,56 +573,56 @@ This agreement shall serve as digital evidence of acceptance upon registration a
             <Link to="/login" className="text-jungle font-black hover:underline underline-offset-4">Log in</Link>
           </p>
         </motion.div>
-
-        {/* Terms Modal */}
-        <AnimatePresence>
-          {showTerms && (
-            <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setShowTerms(false)}
-                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-              />
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                className="relative bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl flex flex-col max-h-[85vh] overflow-hidden"
-              >
-                <div className="p-8 border-b border-gray-100 flex items-center justify-between">
-                  <h2 className="text-xl font-black uppercase tracking-tight">Terms & Regulations</h2>
-                  <button
-                    onClick={() => setShowTerms(false)}
-                    className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
-                  >
-                    <ArrowRight className="rotate-180" size={20} />
-                  </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-10 font-medium text-gray-600 leading-relaxed custom-scrollbar">
-                  <div className="whitespace-pre-wrap text-sm">
-                    {termsText}
-                  </div>
-                </div>
-
-                <div className="p-8 bg-gray-50 flex justify-end">
-                  <button
-                    onClick={() => {
-                      setAcceptedTerms(true);
-                      setShowTerms(false);
-                    }}
-                    className="px-10 py-4 bg-jungle text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-jungle-dark transition-all shadow-xl shadow-jungle/20"
-                  >
-                    Agree & Close
-                  </button>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
       </div>
+
+      {/* Terms Modal */}
+      <AnimatePresence>
+        {showTerms && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowTerms(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl flex flex-col max-h-[85vh] overflow-hidden"
+            >
+              <div className="p-8 border-b border-gray-100 flex items-center justify-between">
+                <h2 className="text-xl font-black uppercase tracking-tight">Terms & Regulations</h2>
+                <button 
+                  onClick={() => setShowTerms(false)}
+                  className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
+                >
+                  <ArrowRight className="rotate-180" size={20} />
+                </button>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-10 font-medium text-gray-600 leading-relaxed custom-scrollbar">
+                <div className="whitespace-pre-wrap text-sm">
+                  {termsText}
+                </div>
+              </div>
+
+              <div className="p-8 bg-gray-50 flex justify-end">
+                <button 
+                  onClick={() => {
+                    setAcceptedTerms(true);
+                    setShowTerms(false);
+                  }}
+                  className="px-10 py-4 bg-jungle text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-jungle-dark transition-all shadow-xl shadow-jungle/20"
+                >
+                  Agree & Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

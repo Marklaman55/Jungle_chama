@@ -104,7 +104,7 @@ export const verifyOtp = async (req: Request, res: Response) => {
 };
 
 export const register = async (req: Request, res: Response) => {
-  const { name, email, password, phone, termsAccepted } = req.body;
+  const { name, email, password, phone, termsAccepted, referredBy } = req.body;
   try {
     let normalizedEmail = email.toLowerCase().trim();
     if (normalizedEmail.endsWith('@gmail.com')) {
@@ -125,6 +125,7 @@ export const register = async (req: Request, res: Response) => {
         password: hashedPassword,
         phone,
         userId,
+        referredBy,
         termsAccepted: !!termsAccepted,
         termsAcceptedAt: termsAccepted ? new Date() : undefined
     });
@@ -134,16 +135,16 @@ export const register = async (req: Request, res: Response) => {
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     const hashedOtp = await bcrypt.hash(otpCode, 10);
     const expiresAt = new Date(Date.now() + 10 * 60000);
-    await new OTP({ email: normalizedEmail, otp: hashedOtp, expiresAt }).save();
+    await new OTP({ email, otp: hashedOtp, expiresAt }).save();
 
     if (phone) {
-      await sendVerificationOTP(normalizedEmail, phone, otpCode);
+      await sendVerificationOTP(email, phone, otpCode);
     }
 
-    res.status(201).json({ message: 'Registration initiated. Please verify your phone number.', email: normalizedEmail });
-    } catch (error: any) {
-        res.status(500).json({ error: error.message });
-    }
+    res.status(201).json({ message: 'Registration initiated. Please verify your phone number.', email });
+  } catch (error: any) {
+      res.status(500).json({ error: error.message });
+  }
 };
 
 export const forgotPassword = async (req: Request, res: Response) => {

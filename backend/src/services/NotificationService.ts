@@ -1,6 +1,9 @@
 import nodemailer from 'nodemailer';
 import twilio from 'twilio';
+import dotenv from 'dotenv';
 import { sendWhatsAppMessage } from './WhatsAppService.js';
+
+dotenv.config();
 
 // Standard Email Configuration
 const transporter = nodemailer.createTransport({
@@ -77,17 +80,14 @@ export const sendWelcomeNotifications = async (email: string, phone: string, nam
   `;
 
   await sendEmailNotification(email, subject, message, html);
-  // SMS and WhatsApp sent non-blocking in background
-  if (phone) {
-    sendSMSNotification(phone, message).catch(() => {});
-    sendWhatsAppMessage(phone, message).catch(() => {});
-  }
+  await sendSMSNotification(phone, message);
+  await sendWhatsAppMessage(phone, message);
 };
 
 export const sendPaymentConfirmation = async (email: string, phone: string, name: string, amount: number, newBalance: number) => {
   const subject = 'Payment Confirmation - Jungle Chama';
   const message = `Hello ${name}, your payment of ${amount} KES has been confirmed. Your new balance is ${newBalance} KES. Thank you for saving!`;
-
+  
   await sendEmailNotification(email, subject, message);
   await sendSMSNotification(phone, message);
   await sendWhatsAppMessage(phone, message);
@@ -96,7 +96,7 @@ export const sendPaymentConfirmation = async (email: string, phone: string, name
 export const sendPayoutAlert = async (email: string, phone: string, name: string, amount: number) => {
   const subject = 'Congratulations! You Received a Payout';
   const message = `Hello ${name}, congratulations! You have received your cycle payout of ${amount} KES. The funds have been credited to your account/M-Pesa.`;
-
+  
   await sendEmailNotification(email, subject, message);
   await sendSMSNotification(phone, message);
   await sendWhatsAppMessage(phone, message);
@@ -124,8 +124,6 @@ export const sendVerificationOTP = async (email: string, phone: string, otp: str
   `;
 
   await sendEmailNotification(email, subject, message, html);
-  // SMS sent separately (non-blocking)
-  if (phone && sendSMSNotification) {
-    sendSMSNotification(phone, message).catch(() => {});
-  }
+  await sendSMSNotification(phone, message);
+  await sendWhatsAppMessage(phone, message);
 };

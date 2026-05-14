@@ -19,9 +19,9 @@ import {
   advanceCycleManual,
   updateMemberBalance,
   triggerMemberStkPush,
-  updateSystemConfig,
   approveManualDeposit,
   approveProduct,
+  updateSystemConfig,
   updateMember,
   deleteMember
 } from '../controllers/AdminController.js';

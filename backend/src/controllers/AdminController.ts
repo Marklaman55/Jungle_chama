@@ -8,6 +8,7 @@ import { initiateStkPush, initiateB2BPayout } from '../services/MpesaService.js'
 import { v4 as uuidv4 } from 'uuid';
 
 import Product from '../models/Product.js';
+import Visitor from '../models/Visitor.js';
 
 export const getWhatsAppStatus = (req: Request, res: Response) => {
   const status = getWhatsAppQR();
@@ -89,7 +90,7 @@ export const buyProduct = async (req: Request, res: Response) => {
     }
 
     if (((product.stock as number) || 0) <= 0) {
-      return res.status(400).json({ error: 'Product out of stock' });
+        return res.status(400).json({ error: 'Product out of stock' });
     }
 
     user.balance -= ((product.price as number) || 0);
@@ -99,13 +100,13 @@ export const buyProduct = async (req: Request, res: Response) => {
     await product.save();
 
     const transaction = new Transaction({
-      userId: user.userId,
-      amount: product.price,
-      transactionId: `BUY-${Date.now()}`,
-      type: 'purchase',
-      status: 'completed',
-      date: new Date(),
-      description: `Purchased ${product.name}`
+        userId: user.userId,
+        amount: product.price,
+        transactionId: `BUY-${Date.now()}`,
+        type: 'purchase',
+        status: 'completed',
+        date: new Date(),
+        description: `Purchased ${product.name}`
     });
     await transaction.save();
 
@@ -134,7 +135,7 @@ export const sendDailyReminders = async (req: Request, res: Response) => {
     for (const user of unpaidUsers) {
       if (user.phone) {
         const message = `Hello ${user.name}, this is a reminder from Jungle Chama. Please top up your account to maintain your cycle position. Minimum required: ${config?.cycleDay} KES. Your current balance: ${user.balance} KES.`;
-        sendWhatsAppMessage(user.phone, message).catch(() => {});
+        await sendWhatsAppMessage(user.phone, message);
         sentCount++;
       }
     }
@@ -244,7 +245,7 @@ export const approveProduct = async (req: Request, res: Response) => {
     const product = await Product.findById(productId);
     if (!product) return res.status(404).json({ error: 'Product not found' });
 
-    product.status = status as any;
+    product.status = status;
     await product.save();
 
     res.json({ message: `Product ${status}`, product });
@@ -276,7 +277,8 @@ export const getTransactions = async (req: Request, res: Response) => {
 export const getSystemConfig = async (req: Request, res: Response) => {
   try {
     const config = await SystemConfig.findOne();
-    res.status(200).json(config);
+    const visitor = await Visitor.findOne();
+    res.status(200).json({ ...config?.toObject(), visitorCount: visitor?.count || 0 });
   } catch (error) {
     console.error('Error fetching system config:', error);
     res.status(500).json({ error: 'Internal server error.' });
@@ -448,60 +450,60 @@ export const processCyclePayout = async (req: Request, res: Response) => {
 };
 
 export const updateMemberBalance = async (req: Request, res: Response) => {
-  const { userId, amount } = req.body;
-  try {
-    const user = await User.findOne({ userId });
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    const { userId, amount } = req.body;
+    try {
+        const user = await User.findOne({ userId });
+        if (!user) return res.status(404).json({ error: 'User not found' });
 
-    user.balance += Number(amount);
-    await user.save();
+        user.balance += Number(amount);
+        await user.save();
 
-    const transaction = new Transaction({
-      userId: user.userId,
-      amount: Number(amount),
-      transactionId: `MANUAL-${Date.now()}`,
-      type: 'deposit',
-      status: 'completed',
-      description: 'Manual administrator deposit',
-      date: new Date()
-    });
-    await transaction.save();
+        const transaction = new Transaction({
+            userId: user.userId,
+            amount: Number(amount),
+            transactionId: `MANUAL-${Date.now()}`,
+            type: 'deposit',
+            status: 'completed',
+            description: 'Manual administrator deposit',
+            date: new Date()
+        });
+        await transaction.save();
 
-    res.json({ message: 'Balance updated', newBalance: user.balance });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update balance' });
-  }
+        res.json({ message: 'Balance updated', newBalance: user.balance });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update balance' });
+    }
 };
 
 export const triggerMemberStkPush = async (req: Request, res: Response) => {
-  const { userId, amount } = req.body;
-  try {
-    const user = await User.findOne({ userId });
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    const { userId, amount } = req.body;
+    try {
+        const user = await User.findOne({ userId });
+        if (!user) return res.status(404).json({ error: 'User not found' });
 
-    const phone = user.phone;
-    const protocol = req.headers['x-forwarded-proto'] || 'https';
-    const host = req.headers['x-forwarded-host'] || req.headers.host;
-    const currentBaseUrl = `${protocol}://${host}`;
-    const response = await initiateStkPush(phone, amount, user.userId, currentBaseUrl);
+        const phone = user.phone;
+        const protocol = req.headers['x-forwarded-proto'] || 'https';
+        const host = req.headers['x-forwarded-host'] || req.headers.host;
+        const currentBaseUrl = `${protocol}://${host}`;
+        const response = await initiateStkPush(phone, amount, user.userId, currentBaseUrl);
 
-    const transaction = new Transaction({
-      userId: user.userId,
-      amount: amount,
-      transactionId: response.CheckoutRequestID || `STK-${Date.now()}`,
-      mpesa_checkout_id: response.CheckoutRequestID,
-      type: 'deposit',
-      status: 'pending',
-      description: 'Admin requested STK Push',
-      date: new Date()
-    });
-    await transaction.save();
+        const transaction = new Transaction({
+            userId: user.userId,
+            amount: amount,
+            transactionId: response.CheckoutRequestID || `STK-${Date.now()}`,
+            mpesa_checkout_id: response.CheckoutRequestID,
+            type: 'deposit',
+            status: 'pending',
+            description: 'Admin requested STK Push',
+            date: new Date()
+        });
+        await transaction.save();
 
-    await sendWhatsAppMessage(phone, `Administrator has requested a payment of ${amount} KES. Please check your phone for the M-Pesa prompt.`);
+        await sendWhatsAppMessage(phone, `Administrator has requested a payment of ${amount} KES. Please check your phone for the M-Pesa prompt.`);
 
-    res.json({ message: 'STK Push initiated', response });
-  } catch (error) {
-    console.error('Error triggering member STK push:', error);
-    res.status(500).json({ error: 'Failed to initiate STK Push' });
-  }
+        res.json({ message: 'STK Push initiated', response });
+    } catch (error) {
+        console.error('Error triggering member STK push:', error);
+        res.status(500).json({ error: 'Failed to initiate STK Push' });
+    }
 };

@@ -6,35 +6,38 @@
     <title>Jungle Chama | WhatsApp Integrated Savings & Rewards</title>
     <meta name="description" content="Join the modern tribe. Save together, earn rewards, and grow your wealth with Jungle Chama's WhatsApp-integrated platform." />
     <meta name="keywords" content="chama, savings, whatsapp, kenya, mpesa, investment, rewards" />
-
+    
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://junglechama.com/" />
     <meta property="og:title" content="Jungle Chama | Modern Savings for Tribes" />
     <meta property="og:description" content="A full-stack WhatsApp-integrated savings and rewards platform for modern tribes." />
+    <meta property="og:image" content="/og-image.png" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://junglechama.com/" />
     <meta property="twitter:title" content="Jungle Chama | Modern Savings for Tribes" />
     <meta property="twitter:description" content="Connect with your tribe and grow your savings on WhatsApp." />
+    <meta property="twitter:image" content="/og-image.png" />
 
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-     <link rel="manifest" href="/manifest.json" />
-     <meta name="theme-color" content="#29AB87" />
-     <link rel="apple-touch-icon" href="/icon-192x192.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#00D100" />
+    <link rel="apple-touch-icon" href="/icon-192x192.png" />
   </head>
   <body>
-<div id="root"></div>
-     <script type="module" src="/src/main.tsx"></script>
-     <script>
-       if ('serviceWorker' in navigator) {
-         window.addEventListener('load', () => {
-           navigator.serviceWorker.register('/sw.js')
-             .then(reg => console.log('SW Registered', reg))
-             .catch(err => console.error('SW Error', err));
-         });
-       }
-     </script>
-   </body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('SW Registered', reg))
+            .catch(err => console.error('SW Error', err));
+        });
+      }
+    </script>
+  </body>
 </html>
+

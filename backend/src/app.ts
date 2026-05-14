@@ -19,10 +19,6 @@ import { initWhatsApp } from './services/WhatsAppService.js';
 import { getProducts } from './controllers/AdminController.js';
 import { getMyPayments } from './controllers/MemberController.js';
 import { authMiddleware } from './middleware/AuthMiddleware.js';
-import User from './models/User.js';
-import SystemConfig from './models/SystemConfig.js';
-import bcrypt from 'bcrypt';
-import { v4 as uuidv4 } from 'uuid';
 import cloudinary from 'cloudinary';
 
 // Configure Cloudinary
@@ -44,10 +40,9 @@ if (!fs.existsSync(uploadsDir)) {
 
 // Multer Storage Configuration (Memory storage for Cloudinary)
 const storage = multer.memoryStorage();
-
 const upload = multer({
   storage,
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit for videos
+  limits: { fileSize: 20 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
       cb(null, true);
@@ -60,29 +55,10 @@ const upload = multer({
 const createApp = async () => {
   const app = express();
 
-  // Health endpoint for Render (must be before all middleware)
+  // Health endpoint for Render (MUST be before ALL middleware — never touches DB)
   app.get('/health', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.status(200).json({ status: 'ok', service: 'jungle-chama-backend' });
-  });
-
-  // API health endpoint (database check)
-  app.get('/api/health', async (req, res) => {
-    try {
-      const state = mongoose.connection.readyState;
-      const stateMap: Record<number, string> = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting', 99: 'uninitialized' };
-      const dbState = stateMap[state] || 'unknown';
-      const ok = state === 1;
-      res.status(ok ? 200 : 503).json({ status: ok ? 'ok' : 'degraded', database: dbState });
-    } catch (err) {
-      res.status(503).json({ status: 'error', database: 'disconnected', error: (err as Error).message });
-    }
-  });
-
-  // Keepalive endpoint to prevent Render sleep
-  app.get('/keepalive', (req, res) => {
-    res.setHeader('Content-Type', 'application/json');
-    res.status(200).json({ status: 'alive' });
   });
 
   // Keepalive endpoint to prevent Render sleep
@@ -104,12 +80,12 @@ const createApp = async () => {
   app.use(express.urlencoded({ extended: true }));
   app.use('/uploads', express.static(uploadsDir));
 
-  // Connect to MongoDB (non-blocking)
+  // Connect to MongoDB (NON-BLOCKING — never crashes the server)
   connectDatabase().catch(err => {
     console.warn('MongoDB connection warning (will retry on first request):', err.message);
   });
 
-  // Initialize WhatsApp if enabled
+  // Initialize WhatsApp if enabled (NON-BLOCKING)
   if (process.env.ENABLE_WHATSAPP === 'true') {
     try {
       await initWhatsApp();
@@ -118,11 +94,14 @@ const createApp = async () => {
     }
   }
 
+  // Start cron (NON-BLOCKING)
+  startCron();
+
   // API health endpoint (database check)
   app.get('/api/health', async (req, res) => {
     try {
       const state = mongoose.connection.readyState;
-      const stateMap = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting', 99: 'uninitialized' };
+      const stateMap: Record<number, string> = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting', 99: 'uninitialized' };
       const dbState = stateMap[state] || 'unknown';
       const ok = state === 1;
       res.status(ok ? 200 : 503).json({ status: ok ? 'ok' : 'degraded', database: dbState });
@@ -131,13 +110,7 @@ const createApp = async () => {
     }
   });
 
-  // Keepalive endpoint to prevent Render sleep
-  app.get('/keepalive', (req, res) => {
-    res.setHeader('Content-Type', 'application/json');
-    res.status(200).send('{"status":"alive"}');
-  });
-
-  // Database guard middleware - returns 503 if DB is not connected
+  // Database guard middleware — returns 503 if DB is not connected
   app.use('/api', async (req, res, next) => {
     if (mongoose.connection.readyState !== 1) {
       return res.status(503).json({ status: 'error', database: 'disconnected' });
@@ -145,7 +118,7 @@ const createApp = async () => {
     next();
   });
 
-  // API request logger for debugging
+  // API request logger
   app.use('/api/*', (req, res, next) => {
     console.log(`[API Request] ${req.method} ${req.url}`);
     next();
@@ -164,14 +137,14 @@ const createApp = async () => {
   app.get('/api/products', getProducts);
   app.get('/api/payments/my', authMiddleware, getMyPayments);
 
-  // Image/Video Upload Route - Uploads to Cloudinary
+  // Image/Video Upload Route — uploads to Cloudinary
   app.post('/api/admin/upload', authMiddleware, upload.single('file'), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' });
       }
 
-      const streamUpload = (req) => {
+      const streamUpload = (req: any) => {
         return new Promise((resolve, reject) => {
           const stream = cloudinary.v2.uploader.upload_stream(
             { resource_type: 'auto' },
@@ -187,15 +160,15 @@ const createApp = async () => {
         });
       };
 
-const result: { secure_url?: string; resource_type?: string } = await streamUpload(req);
+const result = await streamUpload(req) as { secure_url?: string; resource_type?: string };
        res.json({ url: result.secure_url, resource_type: result.resource_type });
-    } catch (error) {
-      console.error('Cloudinary Upload Error:', error);
-      res.status(500).json({ error: error.message || 'Failed to upload to Cloudinary' });
+} catch (error: any) {
+       console.error('Cloudinary Upload Error:', error);
+       res.status(500).json({ error: error.message || 'Failed to upload to Cloudinary' });
     }
   });
 
-  // Fallback for non-existent API routes - ALWAYS RETURN JSON for /api/*
+  // Fallback for non-existent API routes
   app.all('/api/*', (req, res) => {
     console.warn(`[API 404] ${req.method} ${req.url}`);
     res.status(404).json({

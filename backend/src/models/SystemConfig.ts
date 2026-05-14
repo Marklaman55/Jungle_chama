@@ -15,10 +15,10 @@ const SystemConfigSchema: Schema = new Schema({
   cycleOrder: { type: [String], default: [] },
   currentIndex: { type: Number, default: 0 },
   cycleDay: { type: Number, default: 1 },
-  systemState: {
-    type: String,
-    enum: ['RECRUITMENT', 'SAVING', 'BREAK'],
-    default: 'RECRUITMENT'
+  systemState: { 
+    type: String, 
+    enum: ['RECRUITMENT', 'SAVING', 'BREAK'], 
+    default: 'RECRUITMENT' 
   },
   paymentNumber: { type: String, default: '' },
   paymentType: { type: String, enum: ['Till', 'Paybill', 'Personal'], default: 'Till' },

@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'motion/react';
-import { Mail, Lock, ArrowRight, Loader2, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { apiFetch } from '../lib/api';
+import { Mail, Lock, ArrowRight, Loader2, Sparkles, AlertCircle, CheckCircle2 }
+import { apiFetch } from '../lib/api';;
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -24,12 +24,12 @@ const Login: React.FC = () => {
 
   const validateCredentials = () => {
     const errors: Record<string, string> = {};
-
+    
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       errors.email = 'Please enter a valid email address';
     }
-
+    
     if (password.length < 6) {
       errors.password = 'Password must be at least 6 characters long';
     }
@@ -51,6 +51,7 @@ const Login: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
+      
       const data = await res.json();
       if (res.ok) {
         login(data.token, data.user);
@@ -116,19 +117,18 @@ const Login: React.FC = () => {
 
   return (
     <div className="min-h-[calc(100vh-80px)] flex flex-col lg:flex-row bg-white overflow-hidden">
+      {/* Left Side - Visual */}
       <div className="hidden lg:flex lg:w-1/2 bg-black relative items-center justify-center p-20 overflow-hidden">
         <div className="absolute inset-0 opacity-40">
           <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-jungle/40 via-transparent to-transparent" />
-          <img
-            src="https://images.unsplash.com/photo-1553729459-efe14ef6055d?auto=format&fit=crop&q=80&w=2070"
-            alt="Savings"
+          <img 
+            src="https://images.unsplash.com/photo-1553729459-efe14ef6055d?auto=format&fit=crop&q=80&w=2070" 
+            alt="Savings" 
             className="w-full h-full object-cover mix-blend-overlay opacity-50"
             referrerPolicy="no-referrer"
-            loading="lazy"
-            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-          />
+          / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
         </div>
-
+        
         <div className="relative z-10 text-white max-w-lg">
           <motion.div
             initial={{ opacity: 0, x: -30 }}
@@ -142,6 +142,7 @@ const Login: React.FC = () => {
           </motion.div>
         </div>
 
+        {/* Floating element */}
         <motion.div
           animate={{ y: [0, -20, 0] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -151,6 +152,7 @@ const Login: React.FC = () => {
         </motion.div>
       </div>
 
+      {/* Right Side - Form */}
       <div className="flex-1 flex items-center justify-center p-8 sm:p-20 bg-[#F8F9FA]">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -160,19 +162,19 @@ const Login: React.FC = () => {
           <div className="mb-12">
             <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center text-white font-black text-xl mb-8 lg:hidden">J</div>
             <h2 className="text-4xl font-black text-black tracking-tight mb-4">
-              {step === 'credentials' && 'Welcome Back'}
-              {step === 'forgot' && 'Reset Password'}
-              {step === 'reset' && 'Create New Password'}
+                {step === 'credentials' && 'Welcome Back'}
+                {step === 'forgot' && 'Reset Password'}
+                {step === 'reset' && 'Create New Password'}
             </h2>
             <p className="text-gray-400 font-medium">
-              {step === 'credentials' && 'Enter your credentials to access your account.'}
-              {step === 'forgot' && "Enter your email to receive a reset code."}
-              {step === 'reset' && "Enter the code from your email and your new password."}
+                {step === 'credentials' && 'Enter your credentials to access your account.'}
+                {step === 'forgot' && "Enter your email to receive a reset code."}
+                {step === 'reset' && "Enter the code from your email and your new password."}
             </p>
           </div>
 
           {successMessage && !error && (
-            <motion.div
+            <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               className="mb-8 p-5 bg-green-50 text-green-600 text-sm font-bold rounded-2xl border border-green-100 flex items-center gap-3"
@@ -183,7 +185,7 @@ const Login: React.FC = () => {
           )}
 
           {error && (
-            <motion.div
+            <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               className={`mb-8 p-5 ${error.includes('sent') ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-600 border-red-100'} text-sm font-bold rounded-2xl border flex items-center gap-3`}
@@ -232,8 +234,8 @@ const Login: React.FC = () => {
                 </div>
                 {fieldErrors.password && <p className="mt-1 ml-2 text-[10px] text-red-500 font-black uppercase tracking-widest">{fieldErrors.password}</p>}
                 <div className="flex justify-end pt-2">
-                  <button
-                    type="button"
+                  <button 
+                    type="button" 
                     onClick={() => { setStep('forgot'); setResetEmail(email); }}
                     className="text-[10px] font-black text-jungle uppercase tracking-widest hover:underline"
                   >
@@ -291,17 +293,17 @@ const Login: React.FC = () => {
             </form>
           ) : (
             <form onSubmit={handleResetPassword} className="space-y-6">
-              <div className="space-y-2">
+               <div className="space-y-2">
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Reset Code</label>
                 <input
-                  type="text"
-                  required
-                  maxLength={6}
-                  value={resetCode}
-                  onChange={(e) => setResetCode(e.target.value)}
-                  className="w-full px-6 py-5 bg-white border border-gray-100 rounded-[1.5rem] focus:outline-none focus:border-jungle shadow-sm transition-all text-center tracking-[0.5em] font-black text-2xl"
-                  placeholder="000000"
-                />
+                    type="text"
+                    required
+                    maxLength={6}
+                    value={resetCode}
+                    onChange={(e) => setResetCode(e.target.value)}
+                    className="w-full px-6 py-5 bg-white border border-gray-100 rounded-[1.5rem] focus:outline-none focus:border-jungle shadow-sm transition-all text-center tracking-[0.5em] font-black text-2xl"
+                    placeholder="000000"
+                  />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">New Password</label>

@@ -15,11 +15,11 @@ const ProductSchema = new mongoose.Schema({
   creatorId: { type: String, ref: 'User' },
   isGlobal: { type: Boolean, default: true },
   trackerId: { type: String, unique: true, sparse: true },
-}, {
+}, { 
   timestamps: true,
   toJSON: {
     virtuals: true,
-    transform: (doc: any, ret: any) => {
+    transform: (doc, ret: any) => {
       ret.id = ret._id.toString();
       return ret;
     }

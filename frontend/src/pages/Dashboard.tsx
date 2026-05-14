@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
+import { apiFetch } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { apiFetch } from '../lib/api';
 import { 
   Wallet, 
   Users, 
@@ -368,6 +368,17 @@ const Dashboard: React.FC = () => {
               <UserIcon size={14} />
               Profile
             </button>
+            {activeTab === 'profile' && (
+              <div className="bg-white p-4 rounded-2xl border border-gray-100 flex items-center gap-3">
+                <div className="w-8 h-8 bg-jungle/10 rounded-lg flex items-center justify-center text-jungle">
+                  <Users size={16} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Referrals</p>
+                  <p className="text-lg font-black text-black leading-none">{stats?.referralCount || 0}</p>
+                </div>
+              </div>
+            )}
             <div className="px-6 py-3 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3">
               <div className="w-8 h-8 bg-jungle/10 rounded-lg flex items-center justify-center text-jungle">
                 <Trophy size={16} />
@@ -447,10 +458,16 @@ const Dashboard: React.FC = () => {
               <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-10">
                 <div className="space-y-6">
                   <div>
-                    <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-3">Total Wallet Balance</p>
+                    <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-3">Total Savings (Confirmed)</p>
                     <div className="flex items-baseline gap-3">
-                      <span className="text-6xl font-black tracking-tighter">KES {stats?.balance?.toLocaleString() || 0}</span>
-                      <div className="w-3 h-3 rounded-full bg-jungle animate-pulse"></div>
+                      <span className="text-6xl font-black tracking-tighter">KES {stats?.totalSaved?.toLocaleString() || 0}</span>
+                      <div className="w-2 h-2 rounded-full bg-jungle"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-3">Available for Spend/Withdraw</p>
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-4xl font-black tracking-tighter text-gray-400">KES {stats?.balance?.toLocaleString() || 0}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
@@ -464,8 +481,15 @@ const Dashboard: React.FC = () => {
                     <div className="px-6 py-2 bg-white/5 border border-white/10 rounded-2xl flex items-center gap-3">
                       <Users size={16} className="text-jungle" />
                       <div>
-                        <p className="text-[8px] font-black text-white/40 uppercase tracking-widest leading-none mb-1">Active Tribe</p>
-                        <p className="text-sm font-black tracking-tight">Level 1</p>
+                        <p className="text-[8px] font-black text-white/40 uppercase tracking-widest leading-none mb-1">Referrals</p>
+                        <p className="text-sm font-black tracking-tight">{stats?.referralCount || 0}</p>
+                      </div>
+                    </div>
+                    <div className="px-6 py-2 bg-white/5 border border-white/10 rounded-2xl flex items-center gap-3">
+                      <Calendar size={16} className="text-amber-500" />
+                      <div>
+                        <p className="text-[8px] font-black text-white/40 uppercase tracking-widest leading-none mb-1">Cycle Day</p>
+                        <p className="text-sm font-black tracking-tight">{systemConfig?.cycleDay || 1}/10</p>
                       </div>
                     </div>
                   </div>
@@ -487,9 +511,17 @@ const Dashboard: React.FC = () => {
                         className="h-full bg-jungle rounded-full shadow-[0_0_15px_rgba(41,171,135,0.4)]"
                       />
                     </div>
-                    <p className="text-xs text-white/50 font-medium text-center">
-                      {10 - (paidDaysCount || 0)} more payments until your next investment return.
-                    </p>
+                    <div className="space-y-2">
+                       <p className="text-xs text-white/50 font-medium text-center">
+                         {10 - (paidDaysCount || 0)} more payments until your next investment return.
+                       </p>
+                       <div className="bg-white/5 p-3 rounded-xl border border-white/5">
+                         <p className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">Next Payout Recipient</p>
+                         <p className="text-xs font-black text-amber-400">
+                           {systemConfig?.cycleOrder?.[systemConfig?.currentIndex] || 'Determining...'}
+                         </p>
+                       </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -809,10 +841,7 @@ const Dashboard: React.FC = () => {
                   myProducts.map((p) => (
                     <div key={p.id || p._id} className="bg-white border border-gray-100 rounded-[2rem] overflow-hidden group hover:shadow-2xl hover:shadow-black/5 transition-all">
                       <div className="aspect-square bg-gray-50 relative overflow-hidden">
-                        <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.querySelector('.myprod-fallback')?.classList.remove('hidden'); }} />
-                         <div className={`myprod-fallback w-full h-full flex items-center justify-center text-gray-300 ${p.image_url ? 'hidden' : ''}`}>
-                           {p.name?.charAt(0)}
-                         </div>
+                        <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
                         <div className="absolute top-4 right-4">
                           <span className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-white shadow-lg ${
                             p.status === 'approved' ? 'text-green-600' : 'text-amber-600'
@@ -905,10 +934,10 @@ const Dashboard: React.FC = () => {
                       <div className="flex items-center gap-6">
                         <div className="w-20 h-20 bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm p-2 flex items-center justify-center">
                           {item.image_url ? (
-<img src={item.image_url} className="w-full h-full object-contain" alt={item.name} referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.querySelector('.cart-fallback')?.classList.remove('hidden'); }} />
-                             <div className={`cart-fallback w-full h-full flex items-center justify-center text-gray-300 ${item.image_url ? 'hidden' : ''}`}>
-                               {item.name.charAt(0)}
-                             </div>
+                            <img src={item.image_url} className="w-full h-full object-contain" alt={item.name} / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
+                          ) : (
+                            <span className="text-2xl font-black text-gray-200">{item.name.charAt(0)}</span>
+                          )}
                         </div>
                         <div>
                           <h4 className="font-black text-black text-xl mb-1">{item.name}</h4>
@@ -1097,7 +1126,7 @@ const Dashboard: React.FC = () => {
                           {productForm.media?.map((m: any, idx: number) => (
                             <div key={idx} className="relative w-16 h-16 rounded-xl overflow-hidden border border-gray-100 group/item">
                               {m.type === 'image' ? (
-                                <img src={m.url} className="w-full h-full object-cover" />
+                                <img src={m.url} className="w-full h-full object-cover" / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
                               ) : (
                                 <div className="w-full h-full bg-black flex items-center justify-center text-white text-[8px] font-black uppercase text-center">Video</div>
                               )}
@@ -1177,29 +1206,23 @@ const Dashboard: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+            className="fixed inset-0 z-[120] flex items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md"
           >
             <motion.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="bg-white w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl flex flex-col md:flex-row h-full max-h-[80vh]"
+              className="bg-white w-full max-w-2xl rounded-none sm:rounded-[3rem] overflow-hidden shadow-2xl flex flex-col md:flex-row h-full sm:h-auto sm:max-h-[80vh]"
             >
-              <div className="md:w-1/2 bg-gray-50 relative group">
+              <div className="w-full md:w-1/2 bg-gray-50 relative group h-[50vh] md:h-auto min-h-[300px]">
                 {selectedProduct.media && selectedProduct.media.length > 0 ? (
                   <div className="w-full h-full relative">
                     {selectedProduct.media[activeMediaIndex].type === 'image' ? (
-<img
-                         src={selectedProduct.media[activeMediaIndex].url}
-                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                         alt={selectedProduct.name}
-                         loading="lazy"
-                         referrerPolicy="no-referrer"
-                         onError={(e) => {
-                           e.currentTarget.src = '/placeholder.svg';
-                           e.currentTarget.onerror = null;
-                         }}
-                       />
+                      <img 
+                        src={selectedProduct.media[activeMediaIndex].url} 
+                        className="w-full h-full object-cover" 
+                        alt={selectedProduct.name} 
+                      / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
                     ) : (
                       <video 
                         src={selectedProduct.media[activeMediaIndex].url} 
@@ -1224,34 +1247,21 @@ const Dashboard: React.FC = () => {
                   </div>
                 ) : (
                   <>
-{selectedProduct.video_url && (
-                         <video
-                           src={selectedProduct.video_url}
-                           controls
-                           className="w-full h-full object-cover"
-                           poster={selectedProduct.image_url}
-                           onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.querySelector('.dashprod-fallback-video')?.classList.remove('hidden'); }}
-                         />
-                       )}
-                       {!selectedProduct.video_url && (
-                         <img
-                           src={selectedProduct.image_url}
-                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                           alt={selectedProduct.name}
-                           loading="lazy"
-                           referrerPolicy="no-referrer"
-                           onError={(e) => {
-                             e.currentTarget.style.display = 'none';
-                             e.currentTarget.parentElement?.querySelector('.dashprod-fallback')?.classList.remove('hidden');
-                           }}
-                         />
-                       )}
-                       <div className={`dashprod-fallback w-full h-full flex items-center justify-center bg-gray-50 ${selectedProduct.image_url && !selectedProduct.video_url ? 'hidden' : ''}`}>
-                         <span className="text-6xl font-black text-gray-200 uppercase">{selectedProduct.name?.charAt(0)}</span>
-                       </div>
-                       <div className={`dashprod-fallback-video w-full h-full flex items-center justify-center bg-gray-50 ${selectedProduct.video_url ? 'hidden' : ''}`}>
-                         <span className="text-6xl font-black text-gray-200 uppercase">{selectedProduct.name?.charAt(0)}</span>
-                       </div>
+                    {selectedProduct.video_url && (
+                        <video 
+                          src={selectedProduct.video_url} 
+                          controls 
+                          className="w-full h-full object-cover"
+                          poster={selectedProduct.image_url}
+                        />
+                    )}
+                    {!selectedProduct.video_url && (
+                        <img 
+                          src={selectedProduct.image_url} 
+                          className="w-full h-full object-cover" 
+                          alt={selectedProduct.name} 
+                        / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
+                    )}
                   </>
                 )}
                 <button 

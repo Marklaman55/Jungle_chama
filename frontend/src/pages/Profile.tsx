@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'motion/react';
-import { apiFetch } from '../lib/api';
-import { User, Mail, Phone, Wallet, Edit2, Check, X, Loader2 } from 'lucide-react';
+import { User, Mail, Phone, Wallet, Edit2, Check, X, Loader2 }
+import { apiFetch } from '../lib/api';;
 
 const Profile: React.FC = () => {
   const { user, setUser } = useAuth();
@@ -94,11 +94,11 @@ const Profile: React.FC = () => {
             <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
               <div className="relative group">
                 <div className="w-32 h-32 bg-white/10 backdrop-blur-md rounded-3xl flex items-center justify-center border border-white/20 overflow-hidden">
-{avatarUrl ? (
-                     <img src={avatarUrl} alt={user?.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.querySelector('.avatar-fallback')?.classList.remove('hidden'); }} />
-                   ) : (
-                     <User size={64} className="text-jungle avatar-fallback" />
-                   )}
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt={user?.name} className="w-full h-full object-cover" / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
+                  ) : (
+                    <User size={64} className="text-jungle" />
+                  )}
                 </div>
                 {isEditing && (
                   <>
