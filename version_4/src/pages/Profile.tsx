@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'motion/react';
-import { User, Mail, Phone, Wallet, Edit2, Check, X, Loader2 }
-import { apiFetch } from '../lib/api';
+import { User, Mail, Phone, Wallet, Edit2, Check, X, Loader2 } from 'lucide-react';
 
 const Profile: React.FC = () => {
   const { user, setUser } = useAuth();
@@ -22,7 +21,7 @@ const Profile: React.FC = () => {
     setSuccess(null);
 
     try {
-      const response = await apiFetch('/api/member/update-profile', {
+      const response = await fetch('/api/member/update-profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -59,7 +58,7 @@ const Profile: React.FC = () => {
     formData.append('file', file);
 
     try {
-      const res = await apiFetch('/api/admin/upload', {
+      const res = await fetch('/api/admin/upload', {
         method: 'POST',
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         body: formData
@@ -95,7 +94,7 @@ const Profile: React.FC = () => {
               <div className="relative group">
                 <div className="w-32 h-32 bg-white/10 backdrop-blur-md rounded-3xl flex items-center justify-center border border-white/20 overflow-hidden">
                   {avatarUrl ? (
-                    <img src={avatarUrl} alt={user?.name} className="w-full h-full object-cover" / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
+                    <img src={avatarUrl} alt={user?.name} className="w-full h-full object-cover" />
                   ) : (
                     <User size={64} className="text-jungle" />
                   )}

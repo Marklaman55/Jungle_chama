@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Mail, Lock, Phone, ArrowRight, Loader2, Gift, Zap, AlertCircle }
-import { apiFetch } from '../lib/api';
+import { User, Mail, Lock, Phone, ArrowRight, Loader2, Gift, Zap, AlertCircle } from 'lucide-react';
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -291,7 +290,7 @@ This agreement shall serve as digital evidence of acceptance upon registration a
     setError('');
 
     try {
-      const res = await apiFetch('/api/auth/register', {
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, termsAccepted: true })
@@ -317,7 +316,7 @@ This agreement shall serve as digital evidence of acceptance upon registration a
     setLoading(true);
     setError('');
     try {
-      const res = await apiFetch('/api/auth/verify-otp', {
+      const res = await fetch('/api/auth/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: formData.email, otp })
@@ -347,7 +346,7 @@ This agreement shall serve as digital evidence of acceptance upon registration a
             alt="Growth" 
             className="w-full h-full object-cover mix-blend-overlay opacity-50"
             referrerPolicy="no-referrer"
-          / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
+          />
         </div>
         
         <div className="relative z-10 text-white max-w-lg">

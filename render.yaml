@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: jungle-chama-backend
+    env: node
+    plan: starter
+    rootDir: backend
+    healthCheckPath: /health
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:

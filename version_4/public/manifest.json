@@ -1,0 +1,16 @@
+{
+  "name": "Jungle Chama",
+  "short_name": "JungleChama",
+  "description": "Modern Savings for Tribes",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#00D100",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
