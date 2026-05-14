@@ -36,6 +36,7 @@ const Admin: React.FC = () => {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [systemConfig, setSystemConfig] = useState<any>(null);
   const [pendingDeposits, setPendingDeposits] = useState<any[]>([]);
+  const [pendingProducts, setPendingProducts] = useState<any[]>([]);
   const [unpaidInfo, setUnpaidInfo] = useState<{ currentDay: number, unpaidUsers: any[] }>({ currentDay: 0, unpaidUsers: [] });
   const [loading, setLoading] = useState(true);
   const [sendingReminders, setSendingReminders] = useState(false);
@@ -101,9 +102,13 @@ const Admin: React.FC = () => {
           });
         }
       } else if (activeTab === 'approvals') {
-        const res = await fetch('/api/admin/transactions', { headers });
-        const data = await res.json();
-        setPendingDeposits(data.filter((t: any) => t.type === 'manual_deposit' && t.status === 'pending'));
+        const transRes = await fetch('/api/admin/transactions', { headers });
+        const transData = await transRes.json();
+        setPendingDeposits(transData.filter((t: any) => t.type === 'manual_deposit' && t.status === 'pending'));
+
+        const prodRes = await fetch('/api/products', { headers });
+        const prodData = await prodRes.json();
+        setPendingProducts(prodData.filter((p: any) => p.status === 'pending'));
       }
     } catch (err) {
       console.error(err);
@@ -147,6 +152,8 @@ const Admin: React.FC = () => {
       setNotification({ message: 'Failed to add product.', type: 'error' });
     }
   };
+
+
 
   const handleBulkDelete = async () => {
     if (selectedProducts.length === 0) return;
@@ -599,6 +606,11 @@ const Admin: React.FC = () => {
               {systemConfig && (
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-3 px-4 py-2 bg-black/5 rounded-xl border border-black/5">
+                    <div className="flex flex-col">
+                      <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Visitors</span>
+                      <span className="text-xs font-black text-blue-500">{systemConfig?.visitorCount || 0}</span>
+                    </div>
+                    <div className="w-[1px] h-6 bg-black/10"></div>
                     <div className="flex flex-col">
                       <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Day</span>
                       <span className="text-xs font-black text-jungle">{systemConfig.cycleDay}/10</span>
@@ -1504,60 +1516,124 @@ const Admin: React.FC = () => {
 
           {activeTab === 'approvals' && (
             <div className="space-y-12">
-               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                 {pendingDeposits.length === 0 ? (
-                   <div className="col-span-full py-32 bg-white rounded-[3rem] border-2 border-dashed border-gray-100 flex flex-col items-center justify-center text-gray-300 gap-6">
-                     <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center">
-                       <CheckCircle2 size={40} className="opacity-20" />
-                     </div>
-                     <div className="text-center">
-                        <p className="font-black text-2xl tracking-tight text-gray-400">All caught up!</p>
-                        <p className="text-sm font-medium">No manual payments awaiting approval.</p>
-                     </div>
-                   </div>
-                 ) : pendingDeposits.map((dep) => {
-                   const member = members.find(m => m.userId === dep.userId) || { name: dep.userId };
-                   return (
-                     <div key={dep._id || dep.id} className="bg-white p-8 rounded-[2.5rem] shadow-[0_10px_40px_rgb(0,0,0,0.04)] border border-gray-100 flex flex-col gap-6 group hover:translate-y-[-4px] transition-all">
-                       <div className="flex items-center gap-4">
-                         <div className="w-14 h-14 bg-black text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-lg">
-                           {member.name.charAt(0)}
-                         </div>
-                         <div>
-                           <h4 className="font-black text-lg tracking-tight">{member.name}</h4>
-                           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{new Date(dep.date).toLocaleString()}</p>
-                         </div>
-                       </div>
+              <div className="space-y-6">
+                <h3 className="text-2xl font-black text-black tracking-tight flex items-center gap-3">
+                  <Package size={24} className="text-jungle" />
+                  Product Submissions
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {pendingProducts.length === 0 ? (
+                    <div className="col-span-full py-20 bg-white rounded-[3rem] border-2 border-dashed border-gray-100 flex flex-col items-center justify-center text-gray-300 gap-6">
+                      <Package size={40} className="opacity-20" />
+                      <p className="font-bold text-gray-400">No products awaiting approval.</p>
+                    </div>
+                  ) : (
+                    pendingProducts.map((product) => (
+                      <div key={product._id || product.id} className="bg-white rounded-[2.5rem] overflow-hidden shadow-[0_10px_40px_rgb(0,0,0,0.04)] border border-gray-100 flex flex-col group hover:translate-y-[-4px] transition-all">
+                        <div className="relative aspect-square overflow-hidden bg-gray-50 uppercase font-black text-gray-200 text-6xl flex items-center justify-center">
+                          {product.image_url ? (
+                            <img 
+                              src={product.image_url} 
+                              alt={product.name} 
+                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            product.name.charAt(0)
+                          )}
+                          <div className="absolute top-6 right-6">
+                            <span className="px-4 py-2 bg-white/90 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg text-black">
+                              KES {product.price}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="p-8 flex flex-col flex-1">
+                          <div className="flex-1">
+                            <h4 className="font-black text-xl text-black tracking-tight mb-2">{product.name}</h4>
+                            <p className="text-gray-400 text-sm leading-relaxed line-clamp-2 mb-6">{product.description}</p>
+                            <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 mb-6">
+                              <div className="flex items-center justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                <span>Submitted by</span>
+                                <span className="text-black">Member ID: {product.creatorId?.slice(-6) || 'N/A'}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex gap-3 mt-auto">
+                            <button 
+                              onClick={() => handleApproveProduct(product._id || product.id, 'approved')}
+                              className="flex-1 py-4 bg-jungle text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-jungle-dark shadow-lg shadow-jungle/20 transition-all"
+                            >
+                              Approve
+                            </button>
+                            <button 
+                              onClick={() => handleApproveProduct(product._id || product.id, 'rejected')}
+                              className="flex-1 py-4 bg-red-50 text-red-500 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
 
-                       <div className="bg-gray-50 p-6 rounded-2xl">
-                         <div className="flex justify-between items-baseline mb-4">
-                           <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Amount</span>
-                           <span className="text-2xl font-black text-jungle">KES {dep.amount}</span>
-                         </div>
-                         <div className="space-y-2">
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">User Message</span>
-                            <p className="text-xs font-medium text-gray-600 bg-white/50 p-3 rounded-lg border border-gray-100 italic">"{dep.manualMessage}"</p>
-                         </div>
-                       </div>
-
-                       <div className="flex gap-3">
-                         <button 
-                           onClick={() => handleApproveDeposit(dep._id || dep.id, 'completed', dep.amount)}
-                           className="flex-1 py-4 bg-jungle text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-jungle-dark shadow-lg shadow-jungle/20 transition-all"
-                         >
-                           Approve
-                         </button>
-                         <button 
-                           onClick={() => handleApproveDeposit(dep._id || dep.id, 'failed', dep.amount)}
-                           className="flex-1 py-4 bg-red-50 text-red-500 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all"
-                         >
-                           Reject
-                         </button>
-                       </div>
-                     </div>
-                   );
-                 })}
-               </div>
+              <div className="space-y-6">
+                <h3 className="text-2xl font-black text-black tracking-tight flex items-center gap-3 border-t border-gray-100 pt-12">
+                  <History size={24} className="text-amber-500" />
+                  Manual Deposits
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {pendingDeposits.length === 0 ? (
+                    <div className="col-span-full py-32 bg-white rounded-[3rem] border-2 border-dashed border-gray-100 flex flex-col items-center justify-center text-gray-300 gap-6">
+                      <CheckCircle2 size={40} className="opacity-20" />
+                      <p className="font-bold text-gray-400">All caught up! No deposits awaiting approval.</p>
+                    </div>
+                  ) : (
+                    pendingDeposits.map((dep) => {
+                      const member = members.find(m => m.userId === dep.userId) || { name: dep.userId };
+                      return (
+                        <div key={dep._id || dep.id} className="bg-white p-8 rounded-[2.5rem] shadow-[0_10px_40px_rgb(0,0,0,0.04)] border border-gray-100 flex flex-col gap-6 group hover:translate-y-[-4px] transition-all">
+                          <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 bg-black text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-lg">
+                              {member.name?.charAt(0) || dep.userId.charAt(0)}
+                            </div>
+                            <div>
+                              <h4 className="font-black text-lg tracking-tight">{member.name || 'Member'}</h4>
+                              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{new Date(dep.date).toLocaleString()}</p>
+                            </div>
+                          </div>
+                          <div className="bg-gray-50 p-6 rounded-2xl">
+                            <div className="flex justify-between items-baseline mb-4">
+                              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Amount</span>
+                              <span className="text-2xl font-black text-jungle">KES {dep.amount}</span>
+                            </div>
+                            <div className="space-y-2">
+                              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">User Message</span>
+                              <p className="text-xs font-medium text-gray-600 bg-white/50 p-3 rounded-lg border border-gray-100 italic">"{dep.manualMessage}"</p>
+                            </div>
+                          </div>
+                          <div className="flex gap-3 mt-auto">
+                            <button 
+                              onClick={() => handleApproveDeposit(dep._id || dep.id, 'completed', dep.amount)}
+                              className="flex-1 py-4 bg-jungle text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-jungle-dark shadow-lg shadow-jungle/20 transition-all"
+                            >
+                              Approve
+                            </button>
+                            <button 
+                              onClick={() => handleApproveDeposit(dep._id || dep.id, 'failed', dep.amount)}
+                              className="flex-1 py-4 bg-red-50 text-red-500 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </main>

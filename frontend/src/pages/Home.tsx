@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ShieldCheck, Zap, Heart, Sparkles, MessageSquare, Share2, Phone, ShoppingBag, Package, Loader2, ShoppingCart, CheckCircle2 } from 'lucide-react';
-
 import { useCart } from '../context/CartContext';
+import { ArrowRight, ShieldCheck, Zap, Heart, Sparkles, MessageSquare, Share2, Phone, ShoppingBag, Package, Loader2, ShoppingCart, CheckCircle2 } from 'lucide-react';
 import { apiFetch } from '../lib/api';
+import { useInstall } from '../context/InstallContext';
 
 const Home: React.FC = () => {
+  const { addToCart } = useCart();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const { addToCart } = useCart();
   const [notification, setNotification] = useState<string | null>(null);
+  const { showInstallBanner, setShowInstallBanner } = useInstall();
 
   useEffect(() => {
     apiFetch('/api/products')
@@ -22,7 +22,6 @@ const Home: React.FC = () => {
         if (Array.isArray(data)) {
           setProducts(data.slice(0, 3));
         } else {
-          console.error('Expected array of products, got:', data);
           setProducts([]);
         }
         setLoading(false);
@@ -35,7 +34,6 @@ const Home: React.FC = () => {
 
   return (
     <div className="overflow-hidden atmosphere-gradient min-h-screen">
-      {/* Hero Section */}
       <section className="relative pt-32 pb-40 px-4">
         <div className="max-w-7xl mx-auto text-center relative z-10">
           <AnimatePresence>
@@ -60,7 +58,7 @@ const Home: React.FC = () => {
               <Sparkles size={14} className="text-jungle" />
               The Future of Savings is Here
             </div>
-            
+
             <h1 className="text-[12vw] md:text-[8vw] font-display uppercase leading-[0.85] tracking-[-0.04em] text-black mb-12">
               Save Small. <br />
               <span className="text-jungle">Earn Big.</span> <br />
@@ -87,11 +85,11 @@ const Home: React.FC = () => {
               </Link>
             </div>
           </motion.div>
-        </div>
 
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none -z-10">
-          <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-jungle/10 rounded-full blur-[120px] animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[100px]" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none -z-10">
+            <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-jungle/10 rounded-full blur-[120px] animate-pulse" />
+            <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[100px]" />
+          </div>
         </div>
       </section>
 
@@ -108,15 +106,15 @@ const Home: React.FC = () => {
                 Community <br /> <span className="text-jungle">Marketplace.</span>
               </h2>
             </div>
-            <Link 
-              to="/products" 
+            <Link
+              to="/products"
               className="group inline-flex items-center gap-2 text-black font-black text-xs uppercase tracking-[0.2em] hover:text-jungle transition-colors"
             >
               Shop All Products <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-6 sm:gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-10">
             {loading ? (
               [...Array(3)].map((_, i) => (
                 <div key={i} className="bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden flex flex-col h-full">
@@ -133,38 +131,58 @@ const Home: React.FC = () => {
               ))
             ) : products.length > 0 ? (
               products.map((product) => (
-                <Link 
+                <Link
                   key={product.id}
                   to="/products"
                   className="group bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden hover:shadow-[0_40px_80px_rgba(0,0,0,0.06)] transition-all duration-700 flex flex-col h-full"
                 >
-<div className="aspect-square bg-gray-100 relative overflow-hidden flex items-center justify-center">
-                     {(product.image_url || (product.media?.length > 0 && product.media[0].type === 'image')) ? (
-                       <img
-                         src={product.image_url || product.media.find((m: any) => m.type === 'image')?.url}
-                         alt={product.name}
-                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                         referrerPolicy="no-referrer-when-downgrade"
-                         loading="lazy"
-                         onError={(e) => {
-                           e.currentTarget.style.display = 'none';
-                           e.currentTarget.parentElement?.querySelector('.home-prod-fallback')?.classList.remove('hidden');
-                         }}
-                       />
-                     ) : (
-                       <div className="flex flex-col items-center gap-3 p-8 text-center">
-                         <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-inner mb-2">
-                           <Package size={32} className="text-gray-200" />
-                         </div>
-                         <span className="text-gray-300 text-3xl font-black uppercase tracking-tighter opacity-40">{product.name.charAt(0)}</span>
-                         <p className="text-[8px] font-black text-gray-300 uppercase tracking-widest">Image Coming Soon</p>
-                       </div>
-                     )}
-                     <div className="absolute top-6 right-6 px-4 py-2 bg-black/80 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase tracking-widest text-white shadow-xl border border-white/10">
-                       KES {product.price}
-                     </div>
+                  <div className="aspect-square bg-gray-100 relative overflow-hidden flex items-center justify-center">
+                    {(product.image_url || (product.media?.length > 0 && product.media[0].type === 'image')) ? (
+                      <img
+                        src={product.image_url || product.media.find((m: any) => m.type === 'image')?.url}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.parentElement?.querySelector('.home-prod-fallback')?.classList.remove('hidden');
+                        }}
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-3 p-8 text-center">
+                        <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-inner mb-2">
+                          <Package size={32} className="text-gray-200" />
+                        </div>
+                        <span className="text-gray-300 text-3xl font-black uppercase tracking-tighter opacity-40">{product.name.charAt(0)}</span>
+                        <p className="text-[8px] font-black text-gray-300 uppercase tracking-widest">Image Coming Soon</p>
+                      </div>
+                    )}
+                    <div className={`home-prod-fallback w-full h-full flex items-center justify-center text-gray-300 ${product.image_url ? 'hidden' : ''}`}>
+                      {product.name.charAt(0)}
+                    </div>
+                    <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent sm:hidden pointer-events-none">
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="px-2 py-0.5 bg-jungle/20 text-jungle rounded-full text-[8px] font-black uppercase tracking-widest border border-jungle/30">
+                            Community Top
+                          </span>
+                        </div>
+                        <div className="flex items-end justify-between gap-2">
+                          <p className="text-white font-black text-xl uppercase tracking-tight leading-tight line-clamp-1 drop-shadow-md">
+                            {product.name}
+                          </p>
+                          <div className="w-10 h-10 rounded-full bg-jungle flex items-center justify-center shrink-0 shadow-2xl border-4 border-white/20">
+                            <ArrowRight size={16} className="text-white" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="absolute top-6 right-6 px-4 py-2 bg-black/80 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase tracking-widest text-white shadow-xl border border-white/10">
+                      KES {product.price}
+                    </div>
                   </div>
-                  <div className="p-8 flex flex-col flex-1">
+                  <div className="p-8 flex flex-col flex-1 hidden sm:flex">
                     <h3 className="text-xl font-black text-black mb-2 tracking-tight line-clamp-1 uppercase group-hover:text-jungle transition-colors">{product.name}</h3>
                     <p className="text-gray-400 text-xs font-medium line-clamp-2 leading-relaxed mb-8 flex-1">{product.description}</p>
                     <div className="flex items-center justify-between gap-4">
@@ -236,7 +254,7 @@ const Home: React.FC = () => {
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-jungle/20 via-transparent to-transparent" />
         </div>
-        
+
         <div className="max-w-7xl mx-auto px-4 relative z-10">
           <div className="text-center mb-24">
             <h2 className="text-4xl md:text-6xl font-display uppercase tracking-tight mb-6">Why Jungle Chama?</h2>
@@ -284,9 +302,9 @@ const Home: React.FC = () => {
               <div>
                 <h3 className="text-2xl font-black text-black tracking-tight mb-2 uppercase">Official Community</h3>
                 <p className="text-gray-500 font-medium mb-6">Join our WhatsApp group to connect with other members and receive instant updates.</p>
-                <a 
-                  href="https://chat.whatsapp.com/ByPW29cHfuQKumMT6Bjpu9" 
-                  target="_blank" 
+                <a
+                  href="https://chat.whatsapp.com/ByPW29cHfuQKumMT6Bjpu9"
+                  target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-2 text-green-500 font-black text-sm uppercase tracking-widest hover:gap-4 transition-all"
                 >
@@ -333,7 +351,6 @@ const Home: React.FC = () => {
               <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
-          {/* Background pattern */}
           <div className="absolute inset-0 opacity-10 pointer-events-none">
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent" />
           </div>

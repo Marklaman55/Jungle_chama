@@ -8,6 +8,7 @@ import { initiateStkPush, initiateB2BPayout } from '../services/MpesaService';
 import { v4 as uuidv4 } from 'uuid';
 
 import Product from '../models/Product';
+import Visitor from '../models/Visitor';
 
 export const getWhatsAppStatus = (req: Request, res: Response) => {
   const status = getWhatsAppQR();
@@ -284,7 +285,8 @@ export const getTransactions = async (req: Request, res: Response) => {
 export const getSystemConfig = async (req: Request, res: Response) => {
   try {
     const config = await SystemConfig.findOne();
-    res.status(200).json(config);
+    const visitor = await Visitor.findOne();
+    res.status(200).json({ ...config?.toObject(), visitorCount: visitor?.count || 0 });
   } catch (error) {
     console.error('Error fetching system config:', error);
     res.status(500).json({ error: 'Internal server error.' });

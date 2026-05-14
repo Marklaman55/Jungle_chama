@@ -57,18 +57,32 @@ export const getMemberStats = async (req: Request, res: Response) => {
     
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    const transactions = await Transaction.find({ userId, type: 'deposit', status: 'completed' });
+    // Sum of all completed deposits (mpesa and manual)
+    const transactions = await Transaction.find({ 
+      userId, 
+      type: { $in: ['deposit', 'manual_deposit'] }, 
+      status: 'completed' 
+    });
     const totalSaved = transactions.reduce((sum, t) => sum + t.amount, 0);
 
+    // Count referrals
+    const referralCount = await User.countDocuments({ referredBy: userId });
+
     const config = await SystemConfig.findOne();
+    let nextPayoutName = 'Determining...';
+    if (config && config.cycleOrder && config.cycleOrder[config.currentIndex]) {
+        const nextUserId = config.cycleOrder[config.currentIndex];
+        const nextUser = await User.findOne({ userId: nextUserId });
+        nextPayoutName = nextUser ? nextUser.name : nextUserId;
+    }
 
     res.json({
       totalSaved,
-      referralCount: 0,
+      referralCount,
       currentCycle: config ? { 
           day: config.cycleDay, 
           state: config.systemState,
-          nextPayout: config.cycleOrder[config.currentIndex] 
+          nextPayout: nextPayoutName 
       } : null,
       balance: user.balance
     });

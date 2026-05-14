@@ -10,7 +10,7 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://n8n_scrapper:n8n_scrap
 async function listAll() {
   try {
     await mongoose.connect(MONGO_URI, { dbName: 'jungle_chama' });
-    const products = await Product.find({}, 'name id _id');
+    const products = await Product.find({}, 'name id _id image_url status');
     console.log('All Products:', JSON.stringify(products, null, 2));
     process.exit(0);
   } catch (err) {

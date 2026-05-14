@@ -111,7 +111,7 @@ export const verifyOtp = async (req: Request, res: Response) => {
 };
 
 export const register = async (req: Request, res: Response) => {
-  const { name, email, password, phone, termsAccepted } = req.body;
+  const { name, email, password, phone, termsAccepted, referredBy } = req.body;
   try {
     let normalizedEmail = email.toLowerCase().trim();
     if (normalizedEmail.endsWith('@gmail.com')) {
@@ -133,6 +133,7 @@ export const register = async (req: Request, res: Response) => {
         password: hashedPassword,
         phone,
         userId,
+        referredBy,
         termsAccepted: !!termsAccepted,
         termsAcceptedAt: termsAccepted ? new Date() : undefined
     });

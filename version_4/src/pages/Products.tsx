@@ -257,44 +257,57 @@ const Products: React.FC = () => {
                 className="bg-white rounded-[3rem] overflow-hidden shadow-[0_8px_40px_rgb(0,0,0,0.03)] hover:shadow-[0_40px_80px_rgb(0,0,0,0.08)] border border-gray-100 group transition-all duration-500 relative"
               >
                 <div 
-                  className="relative aspect-square overflow-hidden bg-gray-50 uppercase font-black text-gray-200 text-6xl flex items-center justify-center cursor-pointer group"
+                  className="relative aspect-square overflow-hidden bg-gray-100 flex items-center justify-center cursor-pointer group"
                   onClick={() => {
                     setSelectedProduct(product);
                     setShowProductDetails(true);
                   }}
                 >
-                  {product.image_url ? (
+                  {(product.image_url || (product.media?.length > 0 && product.media[0].type === 'image')) ? (
                     <img
-                      src={product.image_url}
+                      src={product.image_url || product.media.find((m: any) => m.type === 'image')?.url}
                       alt={product.name}
                       loading="lazy"
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      referrerPolicy="no-referrer"
+                      referrerPolicy="no-referrer-when-downgrade"
                     />
                   ) : (
-                    product.name.charAt(0)
+                    <div className="flex flex-col items-center gap-3 p-12 text-center">
+                      <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-inner mb-2">
+                        <Package size={40} className="text-gray-200" />
+                      </div>
+                      <span className="text-gray-300 text-4xl font-black uppercase tracking-tighter opacity-40">{product.name.charAt(0)}</span>
+                      <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Image Coming Soon</p>
+                    </div>
                   )}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center hidden sm:flex">
                     <span className="px-6 py-2 bg-white text-black font-black uppercase tracking-widest text-[10px] rounded-full flex items-center gap-2">
                        <ArrowRight size={14} /> View Details
                     </span>
                   </div>
-                  <div className="absolute top-8 right-8 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-2xl font-black text-black shadow-xl border border-white/20 tracking-tight">
+                  <div className="absolute top-6 right-6 sm:top-8 sm:right-8 bg-black/80 backdrop-blur-md px-4 py-2 sm:px-5 sm:py-2.5 rounded-2xl font-black text-white shadow-xl border border-white/10 tracking-tight text-xs sm:text-sm">
                     KES {product.price}
                   </div>
                   {product.stock <= 0 && (
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center">
                       <span className="px-6 py-2 bg-white text-black font-black uppercase tracking-widest text-xs rounded-full">Out of Stock</span>
                     </div>
                   )}
                   {/* name overlay for mobile with better legibility */}
-                  <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/80 via-black/20 to-transparent sm:hidden pointer-events-none">
-                    <div className="flex items-end justify-between gap-2">
-                      <p className="text-white font-black text-xl uppercase tracking-tight leading-tight line-clamp-2">
-                        {product.name}
-                      </p>
-                      <div className="w-10 h-10 rounded-full bg-jungle flex items-center justify-center shrink-0 shadow-lg">
-                        <ArrowRight size={18} className="text-white" />
+                  <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent sm:hidden pointer-events-none">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="px-2 py-0.5 bg-jungle/20 text-jungle rounded-full text-[8px] font-black uppercase tracking-widest border border-jungle/30">
+                          Jungle Exclusive
+                        </span>
+                      </div>
+                      <div className="flex items-end justify-between gap-2">
+                        <p className="text-white font-black text-xl uppercase tracking-tight leading-tight line-clamp-2 drop-shadow-md">
+                          {product.name}
+                        </p>
+                        <div className="w-12 h-12 rounded-full bg-jungle flex items-center justify-center shrink-0 shadow-2xl border-4 border-white/20">
+                          <ArrowRight size={20} className="text-white" />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -420,15 +433,15 @@ const Products: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+            className="fixed inset-0 z-[120] flex items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md"
           >
             <motion.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="bg-white w-full max-w-3xl rounded-[3rem] overflow-hidden shadow-2xl flex flex-col md:flex-row h-full max-h-[85vh]"
+              className="bg-white w-full max-w-2xl rounded-none sm:rounded-[3rem] overflow-hidden shadow-2xl flex flex-col md:flex-row h-full sm:h-auto sm:max-h-[80vh]"
             >
-              <div className="md:w-3/5 bg-gray-100 relative group/media overflow-hidden">
+              <div className="w-full md:w-3/5 bg-gray-50 relative group/media overflow-hidden h-[50vh] md:h-auto min-h-[300px]">
                 {selectedProduct.media && selectedProduct.media.length > 0 ? (
                   <div className="w-full h-full relative group">
                     {selectedProduct.media[activeMediaIndex].type === 'image' ? (

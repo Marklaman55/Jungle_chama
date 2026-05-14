@@ -56,6 +56,8 @@ const upload = multer({
   }
 });
 
+import Visitor from './models/Visitor';
+
 async function startServer() {
   const app = express();
   const PORT = 3000;
@@ -262,8 +264,40 @@ async function startServer() {
       server: { middlewareMode: true },
       appType: 'spa',
     });
-    app.use(vite.middlewares);
+    // Visitor tracking middleware
+    app.use(async (req, res, next) => {
+      if (req.method === 'GET' && (req.path === '/' || req.path === '/index.html')) {
+        try {
+          let visitor = await Visitor.findOne();
+          if (!visitor) {
+            visitor = new Visitor({ count: 1 });
+          } else {
+            visitor.count += 1;
+          }
+          await visitor.save();
+        } catch (err) {
+          console.error('Visitor tracking error:', err);
+        }
+      }
+      vite.middlewares(req, res, next);
+    });
   } else {
+    app.use(async (req, res, next) => {
+      if (req.method === 'GET' && (req.path === '/' || req.path === '/index.html')) {
+        try {
+          let visitor = await Visitor.findOne();
+          if (!visitor) {
+            visitor = new Visitor({ count: 1 });
+          } else {
+            visitor.count += 1;
+          }
+          await visitor.save();
+        } catch (err) {
+          console.error('Visitor tracking error:', err);
+        }
+      }
+      next();
+    });
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {

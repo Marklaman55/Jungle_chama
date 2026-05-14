@@ -14,6 +14,7 @@ export interface IUser extends Document {
   isVerified: boolean;
   payout_number?: number;
   avatar_url?: string;
+  referredBy?: string;
   createdAt: Date;
 }
 
@@ -31,6 +32,7 @@ const UserSchema: Schema = new Schema({
   isVerified: { type: Boolean, default: false },
   payout_number: { type: Number },
   avatar_url: { type: String },
+  referredBy: { type: String },
   createdAt: { type: Date, default: Date.now },
 }, {
   toJSON: {

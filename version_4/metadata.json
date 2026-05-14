@@ -1,0 +1,7 @@
+{
+  "name": "Jungle Chama System",
+  "description": "A modern Gen Z chama savings and e-commerce platform with automated cycles, product approvals, visitor tracking, and deep M-Pesa integration.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
