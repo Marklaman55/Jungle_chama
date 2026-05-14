@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'motion/react';
 import { Mail, Lock, ArrowRight, Loader2, Sparkles, AlertCircle, CheckCircle2 }
-import { apiFetch } from '../lib/api';;
+import { apiFetch } from '../lib/api';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { User, Mail, Lock, Phone, ArrowRight, Loader2, Gift, Zap, AlertCircle }
-import { apiFetch } from '../lib/api';;
+import { apiFetch } from '../lib/api';
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({

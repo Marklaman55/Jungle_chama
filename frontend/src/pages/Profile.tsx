@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'motion/react';
 import { User, Mail, Phone, Wallet, Edit2, Check, X, Loader2 }
-import { apiFetch } from '../lib/api';;
+import { apiFetch } from '../lib/api';
 
 const Profile: React.FC = () => {
   const { user, setUser } = useAuth();
