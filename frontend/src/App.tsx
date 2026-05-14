@@ -71,31 +71,5 @@ export default function App() {
         </CartProvider>
       </AuthProvider>
     </InstallProvider>
-  );
-}
-                />
-                <Route
-                  path="/admin"
-                  element={
-                    <PrivateRoute adminOnly>
-                      <Admin />
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/profile"
-                  element={
-                    <PrivateRoute>
-                      <Profile />
-                    </PrivateRoute>
-                  }
-                />
-              </Routes>
-              <InstallBanner />
-            </div>
-          </Router>
-        </CartProvider>
-      </AuthProvider>
-    </InstallProvider>
-  );
+);
 }
