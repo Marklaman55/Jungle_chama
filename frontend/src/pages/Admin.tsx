@@ -737,11 +737,11 @@ const Admin: React.FC = () => {
                         <div className="flex flex-wrap gap-4 mb-4">
                           {newProduct.media?.map((m: any, idx: number) => (
                             <div key={idx} className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-100 group/item">
-                              {m.type === 'image' ? (
-                                <img src={m.url} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full bg-black flex items-center justify-center text-white text-[8px] font-black uppercase">Video</div>
-                              )}
+{m.type === 'image' ? (
+                                 <img src={m.url} className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                               ) : (
+                                 <div className="w-full h-full bg-black flex items-center justify-center text-white text-[8px] font-black uppercase">Video</div>
+                               )}
                               <button 
                                 type="button"
                                 onClick={() => setNewProduct({ ...newProduct, media: newProduct.media.filter((_: any, i: number) => i !== idx) })}
@@ -959,17 +959,22 @@ const Admin: React.FC = () => {
                           )}
 
                           <div className="relative aspect-square overflow-hidden bg-gray-50 uppercase font-black text-gray-200 text-6xl flex items-center justify-center">
-                            {product.image_url ? (
-                              <img 
-                                src={product.image_url} 
-                                alt={product.name} 
-                                loading="lazy"
-                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                                referrerPolicy="no-referrer" 
-                              />
-                            ) : (
-                              product.name.charAt(0)
-                            )}
+{product.image_url ? (
+                               <img
+                                 src={product.image_url}
+                                 alt={product.name}
+                                 loading="lazy"
+                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                 referrerPolicy="no-referrer"
+                                 onError={(e) => {
+                                   e.currentTarget.style.display = 'none';
+                                   e.currentTarget.parentElement?.querySelector('.admin-prod-fallback')?.classList.remove('hidden');
+                                 }}
+                               />
+                             ) : null}
+                             <div className={`admin-prod-fallback w-full h-full flex items-center justify-center text-gray-300 ${product.image_url ? 'hidden' : ''}`}>
+                               {product.name?.charAt(0)}
+                             </div>
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-8 gap-3">
                               {product.status === 'pending' && (
                                 <div className="flex gap-2 w-full">

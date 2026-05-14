@@ -121,12 +121,14 @@ const Login: React.FC = () => {
       <div className="hidden lg:flex lg:w-1/2 bg-black relative items-center justify-center p-20 overflow-hidden">
         <div className="absolute inset-0 opacity-40">
           <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-jungle/40 via-transparent to-transparent" />
-          <img 
-            src="https://images.unsplash.com/photo-1553729459-efe14ef6055d?auto=format&fit=crop&q=80&w=2070" 
-            alt="Savings" 
-            className="w-full h-full object-cover mix-blend-overlay opacity-50"
-            referrerPolicy="no-referrer"
-          />
+<img
+             src="https://images.unsplash.com/photo-1553729459-efe14ef6055d?auto=format&fit=crop&q=80&w=2070"
+             alt="Savings"
+             className="w-full h-full object-cover mix-blend-overlay opacity-50"
+             referrerPolicy="no-referrer"
+             loading="lazy"
+             onError={(e) => { e.currentTarget.style.display = 'none'; }}
+           />
         </div>
         
         <div className="relative z-10 text-white max-w-lg">

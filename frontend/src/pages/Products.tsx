@@ -224,8 +224,8 @@ const Products: React.FC = () => {
                     setShowProductDetails(true);
                   }}
                 >
-                  {product.image_url ? (
-                    <img
+{product.image_url ? (
+                     <img
                       src={product.image_url}
                       alt={product.name}
                       loading="lazy"
@@ -233,14 +233,15 @@ const Products: React.FC = () => {
                       referrerPolicy="no-referrer"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
-                        e.currentTarget.parentElement?.querySelector('.fallback-text')?.classList.remove('hidden');
+                        const parent = e.currentTarget.parentElement;
+                        const fallback = parent?.querySelector('.fallback-text');
+                        if (fallback) fallback.classList.remove('hidden');
                       }}
                     />
-                  ) : (
-                    <div className="fallback-text w-full h-full flex items-center justify-center text-gray-300">
-                      {product.name?.charAt(0)?.toUpperCase()}
-                    </div>
-                  )}
+                  ) : null}
+                  <div className={`fallback-text w-full h-full flex items-center justify-center text-gray-300 ${product.image_url ? 'hidden' : ''}`}>
+                    {product.name?.charAt(0)?.toUpperCase()}
+                  </div>
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
                     <span className="px-6 py-2 bg-white text-black font-black uppercase tracking-widest text-[10px] rounded-full flex items-center gap-2">
                       <ArrowRight size={14} /> View Details
@@ -307,28 +308,34 @@ const Products: React.FC = () => {
                 <div className="md:w-3/5 bg-gray-100 relative group/media overflow-hidden">
                   {selectedProduct.media && selectedProduct.media.length > 0 ? (
                     <div className="w-full h-full relative group">
-                      {selectedProduct.media[activeMediaIndex]?.type === 'video' ? (
-                        <div className="relative w-full h-full" style={{ paddingTop: '100%' }}>
-                          <video
-                            key={selectedProduct.media[activeMediaIndex].url}
-                            src={selectedProduct.media[activeMediaIndex].url}
-                            controls
-                            className="absolute inset-0 w-full h-full object-cover"
-                            autoPlay
-                            muted
-                            loop
-                          />
-                        </div>
+{selectedProduct.media[activeMediaIndex]?.type === 'video' ? (
+                         <div className="relative w-full h-full" style={{ paddingTop: '100%' }}>
+                           <video
+                             key={selectedProduct.media[activeMediaIndex].url}
+                             src={selectedProduct.media[activeMediaIndex].url}
+                             controls
+                             className="absolute inset-0 w-full h-full object-cover"
+                             autoPlay
+                             muted
+                             loop
+                             onError={(e) => {
+                               e.currentTarget.src = '/placeholder.svg';
+                               e.currentTarget.onerror = null;
+                             }}
+                           />
+                         </div>
                       ) : (
-                        <img
-                          src={selectedProduct.media[activeMediaIndex].url}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                          alt={selectedProduct.name}
-                          loading="lazy"
-                          onError={(e) => {
-                            e.currentTarget.src = '/placeholder.svg';
-                          }}
-                        />
+<img
+                           src={selectedProduct.media[activeMediaIndex].url}
+                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                           alt={selectedProduct.name}
+                           loading="lazy"
+                           referrerPolicy="no-referrer"
+                           onError={(e) => {
+                             e.currentTarget.src = '/placeholder.svg';
+                             e.currentTarget.onerror = null;
+                           }}
+                         />
                       )}
                       {selectedProduct.media.length > 1 && (
                         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
@@ -344,21 +351,26 @@ const Products: React.FC = () => {
                     </div>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gray-50" style={{ minHeight: '300px' }}>
-                      {selectedProduct.image_url ? (
-                        <img
-                          src={selectedProduct.image_url}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                          alt={selectedProduct.name}
-                          loading="lazy"
-                          onError={(e) => {
-                            e.currentTarget.src = '/placeholder.svg';
-                          }}
-                        />
-                      ) : (
-                        <span className="text-6xl font-black text-gray-200 uppercase">{selectedProduct.name?.charAt(0)}</span>
-                      )}
-                    </div>
-                  )}
+{selectedProduct.image_url && (
+                         <img
+                           src={selectedProduct.image_url}
+                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                           alt={selectedProduct.name}
+                           loading="lazy"
+                           referrerPolicy="no-referrer"
+                           onError={(e) => {
+                             e.currentTarget.style.display = 'none';
+                             const parent = e.currentTarget.parentElement;
+                             const fallback = parent?.querySelector('.modal-fallback-text');
+                             if (fallback) fallback.classList.remove('hidden');
+                           }}
+                         />
+                       )}
+                       {!selectedProduct.image_url && (
+                         <div className="modal-fallback-text w-full h-full flex items-center justify-center bg-gray-50">
+                           <span className="text-6xl font-black text-gray-200 uppercase">{selectedProduct.name?.charAt(0)}</span>
+                         </div>
+                       )}
                   <button
                     onClick={() => { setShowProductDetails(false); setActiveMediaIndex(0); }}
                     className="absolute top-6 left-6 w-12 h-12 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-black shadow-2xl hover:scale-110 hover:bg-white transition-all z-30"

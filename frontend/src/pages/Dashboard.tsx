@@ -809,7 +809,10 @@ const Dashboard: React.FC = () => {
                   myProducts.map((p) => (
                     <div key={p.id || p._id} className="bg-white border border-gray-100 rounded-[2rem] overflow-hidden group hover:shadow-2xl hover:shadow-black/5 transition-all">
                       <div className="aspect-square bg-gray-50 relative overflow-hidden">
-                        <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                        <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.querySelector('.myprod-fallback')?.classList.remove('hidden'); }} />
+                         <div className={`myprod-fallback w-full h-full flex items-center justify-center text-gray-300 ${p.image_url ? 'hidden' : ''}`}>
+                           {p.name?.charAt(0)}
+                         </div>
                         <div className="absolute top-4 right-4">
                           <span className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-white shadow-lg ${
                             p.status === 'approved' ? 'text-green-600' : 'text-amber-600'
@@ -902,10 +905,10 @@ const Dashboard: React.FC = () => {
                       <div className="flex items-center gap-6">
                         <div className="w-20 h-20 bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm p-2 flex items-center justify-center">
                           {item.image_url ? (
-                            <img src={item.image_url} className="w-full h-full object-contain" alt={item.name} />
-                          ) : (
-                            <span className="text-2xl font-black text-gray-200">{item.name.charAt(0)}</span>
-                          )}
+<img src={item.image_url} className="w-full h-full object-contain" alt={item.name} referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.querySelector('.cart-fallback')?.classList.remove('hidden'); }} />
+                             <div className={`cart-fallback w-full h-full flex items-center justify-center text-gray-300 ${item.image_url ? 'hidden' : ''}`}>
+                               {item.name.charAt(0)}
+                             </div>
                         </div>
                         <div>
                           <h4 className="font-black text-black text-xl mb-1">{item.name}</h4>
@@ -1186,11 +1189,17 @@ const Dashboard: React.FC = () => {
                 {selectedProduct.media && selectedProduct.media.length > 0 ? (
                   <div className="w-full h-full relative">
                     {selectedProduct.media[activeMediaIndex].type === 'image' ? (
-                      <img 
-                        src={selectedProduct.media[activeMediaIndex].url} 
-                        className="w-full h-full object-cover" 
-                        alt={selectedProduct.name} 
-                      />
+<img
+                         src={selectedProduct.media[activeMediaIndex].url}
+                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                         alt={selectedProduct.name}
+                         loading="lazy"
+                         referrerPolicy="no-referrer"
+                         onError={(e) => {
+                           e.currentTarget.src = '/placeholder.svg';
+                           e.currentTarget.onerror = null;
+                         }}
+                       />
                     ) : (
                       <video 
                         src={selectedProduct.media[activeMediaIndex].url} 
@@ -1215,21 +1224,34 @@ const Dashboard: React.FC = () => {
                   </div>
                 ) : (
                   <>
-                    {selectedProduct.video_url && (
-                        <video 
-                          src={selectedProduct.video_url} 
-                          controls 
-                          className="w-full h-full object-cover"
-                          poster={selectedProduct.image_url}
-                        />
-                    )}
-                    {!selectedProduct.video_url && (
-                        <img 
-                          src={selectedProduct.image_url} 
-                          className="w-full h-full object-cover" 
-                          alt={selectedProduct.name} 
-                        />
-                    )}
+{selectedProduct.video_url && (
+                         <video
+                           src={selectedProduct.video_url}
+                           controls
+                           className="w-full h-full object-cover"
+                           poster={selectedProduct.image_url}
+                           onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.querySelector('.dashprod-fallback-video')?.classList.remove('hidden'); }}
+                         />
+                       )}
+                       {!selectedProduct.video_url && (
+                         <img
+                           src={selectedProduct.image_url}
+                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                           alt={selectedProduct.name}
+                           loading="lazy"
+                           referrerPolicy="no-referrer"
+                           onError={(e) => {
+                             e.currentTarget.style.display = 'none';
+                             e.currentTarget.parentElement?.querySelector('.dashprod-fallback')?.classList.remove('hidden');
+                           }}
+                         />
+                       )}
+                       <div className={`dashprod-fallback w-full h-full flex items-center justify-center bg-gray-50 ${selectedProduct.image_url && !selectedProduct.video_url ? 'hidden' : ''}`}>
+                         <span className="text-6xl font-black text-gray-200 uppercase">{selectedProduct.name?.charAt(0)}</span>
+                       </div>
+                       <div className={`dashprod-fallback-video w-full h-full flex items-center justify-center bg-gray-50 ${selectedProduct.video_url ? 'hidden' : ''}`}>
+                         <span className="text-6xl font-black text-gray-200 uppercase">{selectedProduct.name?.charAt(0)}</span>
+                       </div>
                   </>
                 )}
                 <button 

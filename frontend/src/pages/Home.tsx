@@ -140,12 +140,20 @@ const Home: React.FC = () => {
                 >
                   <div className="aspect-square bg-gray-50 relative overflow-hidden flex items-center justify-center">
                     {product.image_url ? (
-                      <img 
-                        src={product.image_url} 
-                        alt={product.name} 
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                        referrerPolicy="no-referrer"
-                      />
+<img
+                         src={product.image_url}
+                         alt={product.name}
+                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                         referrerPolicy="no-referrer"
+                         loading="lazy"
+                         onError={(e) => {
+                           e.currentTarget.style.display = 'none';
+                           e.currentTarget.parentElement?.querySelector('.home-prod-fallback')?.classList.remove('hidden');
+                         }}
+                       />
+                       <div className={`home-prod-fallback w-full h-full flex items-center justify-center text-gray-300 ${product.image_url ? 'hidden' : ''}`}>
+                         {product.name.charAt(0)}
+                       </div>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-100 text-6xl font-black uppercase tracking-tighter">{product.name.charAt(0)}</div>
                     )}
