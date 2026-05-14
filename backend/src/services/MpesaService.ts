@@ -58,7 +58,7 @@ export const initiateStkPush = async (phone: string, amount: number, accountRefe
     // If the callback URL is from a different AI Studio environment, we likely want to auto-detect instead
     if (finalCallbackUrl && finalCallbackUrl.includes('run.app') && baseUrlOverride && !finalCallbackUrl.includes(baseUrlOverride.split('//')[1].split('.')[0])) {
         console.warn(`Provided MPESA_CALLBACK_URL (${finalCallbackUrl}) seems to belong to another app. Overriding with current base: ${baseUrlOverride}`);
-        finalCallbackUrl = null;
+        finalCallbackUrl = undefined;
     }
 
     if (!finalCallbackUrl) {

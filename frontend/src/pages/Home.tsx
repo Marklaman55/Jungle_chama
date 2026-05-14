@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ShieldCheck, Zap, Heart, Sparkles, MessageSquare, Share2, Phone, ShoppingBag, Package, Loader2, ShoppingCart, CheckCircle2 } from 'lucide-react';
 
@@ -13,7 +13,7 @@ const Home: React.FC = () => {
   const [notification, setNotification] = useState<string | null>(null);
 
   useEffect(() => {
-    apiapiFetch('/api/products')
+    apiFetch('/api/products')
       .then(res => {
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         return res.json();
@@ -38,7 +38,7 @@ const Home: React.FC = () => {
       {/* Hero Section */}
       <section className="relative pt-32 pb-40 px-4">
         <div className="max-w-7xl mx-auto text-center relative z-10">
-          <AnimatePresence>
+          <>
             {notification && (
               <motion.div
                 initial={{ opacity: 0, y: -20, scale: 0.95 }}
@@ -50,7 +50,7 @@ const Home: React.FC = () => {
                 {notification}
               </motion.div>
             )}
-          </AnimatePresence>
+          </>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -140,12 +140,13 @@ const Home: React.FC = () => {
                 >
                   <div className="aspect-square bg-gray-100 relative overflow-hidden flex items-center justify-center">
                     {(product.image_url || (product.media?.length > 0 && product.media[0].type === 'image')) ? (
-                      <img 
-                        src={product.image_url || product.media.find((m: any) = onError={(e) => { e.currentTarget.style.display = `"none`"; }}> m.type === 'image')?.url} 
-                        alt={product.name} 
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                        referrerPolicy="no-referrer-when-downgrade"
-                      />
+<img
+                         src={product.image_url || product.media.find((m: any) => m.type === 'image')?.url}
+                         alt={product.name}
+                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                         referrerPolicy="no-referrer-when-downgrade"
+                         onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                       />
                     ) : (
                       <div className="flex flex-col items-center gap-3 p-8 text-center">
                         <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-inner mb-2">

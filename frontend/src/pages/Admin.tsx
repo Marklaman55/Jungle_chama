@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { 
   Plus, 
   Package, 
@@ -26,6 +26,7 @@ import {
   CheckSquare,
   Download
 } from 'lucide-react';
+import { apiFetch } from '../lib/api';
 
 const Admin: React.FC = () => {
   const { getToken } = useAuth();
@@ -646,7 +647,7 @@ const Admin: React.FC = () => {
         </header>
 
         {/* Notification Toast */}
-        <AnimatePresence>
+        <>
           {notification && (
             <motion.div
               initial={{ opacity: 0, y: -20, scale: 0.95 }}
@@ -674,7 +675,7 @@ const Admin: React.FC = () => {
               </button>
             </motion.div>
           )}
-        </AnimatePresence>
+        </>
 
         {/* Navigation Tabs */}
         <div className="overflow-x-auto no-scrollbar -mx-4 px-4 mb-12">
@@ -760,7 +761,7 @@ const Admin: React.FC = () => {
                           {newProduct.media?.map((m: any, idx: number) => (
                             <div key={idx} className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-100 group/item">
                               {m.type === 'image' ? (
-                                <img src={m.url} className="w-full h-full object-cover" / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
+                                <img src={m.url} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                               ) : (
                                 <div className="w-full h-full bg-black flex items-center justify-center text-white text-[8px] font-black uppercase">Video</div>
                               )}
@@ -987,8 +988,9 @@ const Admin: React.FC = () => {
                                 alt={product.name} 
                                 loading="lazy"
                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                                referrerPolicy="no-referrer" 
-                              / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
+referrerPolicy="no-referrer"
+                                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                               />
                             ) : (
                               product.name.charAt(0)
                             )}
@@ -1371,7 +1373,7 @@ const Admin: React.FC = () => {
                 ) : whatsappStatus?.qr ? (
                   <div className="space-y-8">
                     <div className="bg-white p-8 rounded-[2.5rem] border-2 border-dashed border-gray-200 inline-block">
-                      <img src={whatsappStatus.qr} alt="WhatsApp QR Code" className="w-64 h-64 mx-auto" / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
+                      <img src={whatsappStatus.qr} alt="WhatsApp QR Code" className="w-64 h-64 mx-auto" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                     </div>
                     <div className="bg-gray-50 p-6 rounded-2xl text-left max-w-md mx-auto">
                       <h5 className="font-black text-black mb-3 text-sm uppercase tracking-widest">How to connect:</h5>
@@ -1532,12 +1534,13 @@ const Admin: React.FC = () => {
                       <div key={product._id || product.id} className="bg-white rounded-[2.5rem] overflow-hidden shadow-[0_10px_40px_rgb(0,0,0,0.04)] border border-gray-100 flex flex-col group hover:translate-y-[-4px] transition-all">
                         <div className="relative aspect-square overflow-hidden bg-gray-50 uppercase font-black text-gray-200 text-6xl flex items-center justify-center">
                           {product.image_url ? (
-                            <img 
-                              src={product.image_url} 
-                              alt={product.name} 
-                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                              referrerPolicy="no-referrer"
-                            / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
+<img
+                               src={product.image_url}
+                               alt={product.name}
+                               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                               referrerPolicy="no-referrer"
+                               onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                             />
                           ) : (
                             product.name.charAt(0)
                           )}
@@ -1640,7 +1643,7 @@ const Admin: React.FC = () => {
       </div>
 
       {/* Modals & Overlays */}
-      <AnimatePresence>
+      <>
         {editingMember && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
             <motion.div
@@ -1812,7 +1815,7 @@ const Admin: React.FC = () => {
                     {editingProduct.media?.map((m: any, idx: number) => (
                       <div key={idx} className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-100 group/item">
                         {m.type === 'image' ? (
-                          <img src={m.url} className="w-full h-full object-cover" / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
+                          <img src={m.url} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                         ) : (
                           <div className="w-full h-full bg-black flex items-center justify-center text-white text-[8px] font-black uppercase text-center">Video</div>
                         )}
@@ -1927,7 +1930,7 @@ const Admin: React.FC = () => {
           </div>
         )}
 
-      </AnimatePresence>
+      </>
     </div>
   );
 };

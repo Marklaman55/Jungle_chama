@@ -3,7 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { 
   Wallet, 
   Users, 
@@ -392,7 +392,7 @@ const Dashboard: React.FC = () => {
         </header>
 
         {/* Notifications */}
-        <AnimatePresence>
+        <>
           {notification && (
             <motion.div
               initial={{ opacity: 0, y: -20, scale: 0.95 }}
@@ -420,7 +420,7 @@ const Dashboard: React.FC = () => {
               </button>
             </motion.div>
           )}
-        </AnimatePresence>
+        </>
 
         {/* Tab Navigation */}
         <div className="flex items-center gap-2 mb-10 overflow-x-auto pb-2 scrollbar-none">
@@ -595,7 +595,7 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* 3. PENDING & CART (Contextual) */}
-            <AnimatePresence>
+            <>
               {(payments.filter(p => p.type === 'manual_deposit' && p.status === 'pending').length > 0 || cart.length > 0) && (
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
@@ -639,7 +639,7 @@ const Dashboard: React.FC = () => {
                   )}
                 </motion.div>
               )}
-            </AnimatePresence>
+            </>
 
             {/* 4. HISTORY (Unified List) */}
             <section className="bg-white p-10 rounded-[3.5rem] shadow-[0_8px_40px_rgba(0,0,0,0.02)] border border-gray-100">
@@ -841,7 +841,7 @@ const Dashboard: React.FC = () => {
                   myProducts.map((p) => (
                     <div key={p.id || p._id} className="bg-white border border-gray-100 rounded-[2rem] overflow-hidden group hover:shadow-2xl hover:shadow-black/5 transition-all">
                       <div className="aspect-square bg-gray-50 relative overflow-hidden">
-                        <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
+                        <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                         <div className="absolute top-4 right-4">
                           <span className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-white shadow-lg ${
                             p.status === 'approved' ? 'text-green-600' : 'text-amber-600'
@@ -934,7 +934,7 @@ const Dashboard: React.FC = () => {
                       <div className="flex items-center gap-6">
                         <div className="w-20 h-20 bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm p-2 flex items-center justify-center">
                           {item.image_url ? (
-                            <img src={item.image_url} className="w-full h-full object-contain" alt={item.name} / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
+                            <img src={item.image_url} className="w-full h-full object-contain" alt={item.name} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                           ) : (
                             <span className="text-2xl font-black text-gray-200">{item.name.charAt(0)}</span>
                           )}
@@ -997,7 +997,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Payment Confirmation Modal */}
-      <AnimatePresence>
+      <>
         {showConfirm && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -1050,10 +1050,10 @@ const Dashboard: React.FC = () => {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </>
 
       {/* Product Upload Modal */}
-      <AnimatePresence>
+      <>
         {showProductModal && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -1126,7 +1126,7 @@ const Dashboard: React.FC = () => {
                           {productForm.media?.map((m: any, idx: number) => (
                             <div key={idx} className="relative w-16 h-16 rounded-xl overflow-hidden border border-gray-100 group/item">
                               {m.type === 'image' ? (
-                                <img src={m.url} className="w-full h-full object-cover" / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
+                                <img src={m.url} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                               ) : (
                                 <div className="w-full h-full bg-black flex items-center justify-center text-white text-[8px] font-black uppercase text-center">Video</div>
                               )}
@@ -1197,10 +1197,10 @@ const Dashboard: React.FC = () => {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </>
 
       {/* Product Details Modal */}
-      <AnimatePresence>
+      <>
         {showProductDetails && selectedProduct && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -1221,10 +1221,11 @@ const Dashboard: React.FC = () => {
                       <img 
                         src={selectedProduct.media[activeMediaIndex].url} 
                         className="w-full h-full object-cover" 
-                        alt={selectedProduct.name} 
-                      / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
-                    ) : (
-                      <video 
+alt={selectedProduct.name}
+                         onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                       />
+                     ) : (
+                       <video
                         src={selectedProduct.media[activeMediaIndex].url} 
                         controls 
                         className="w-full h-full object-cover"
@@ -1259,8 +1260,9 @@ const Dashboard: React.FC = () => {
                         <img 
                           src={selectedProduct.image_url} 
                           className="w-full h-full object-cover" 
-                          alt={selectedProduct.name} 
-                        / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
+alt={selectedProduct.name}
+                           onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                         />
                     )}
                   </>
                 )}
@@ -1305,7 +1307,7 @@ const Dashboard: React.FC = () => {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </>
       <footer className="mt-20 py-10 border-t border-gray-100 text-center">
         <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">
           &copy; 2026 THE JUNGLE SAVINGS CHAMA. ALL RIGHTS RESERVED.

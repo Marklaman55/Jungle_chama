@@ -9,6 +9,11 @@ export interface ISystemConfig extends Document {
   paymentType: 'Till' | 'Paybill' | 'Personal';
   manualPaymentDetails: string;
   lastCycleUpdate: Date;
+  adminPhone?: string;
+  depositChargePercentage?: number;
+  cycleDuration?: number;
+  sharePrice?: number;
+  payoutPercentage?: number;
 }
 
 const SystemConfigSchema: Schema = new Schema({
@@ -23,7 +28,12 @@ const SystemConfigSchema: Schema = new Schema({
   paymentNumber: { type: String, default: '' },
   paymentType: { type: String, enum: ['Till', 'Paybill', 'Personal'], default: 'Till' },
   manualPaymentDetails: { type: String, default: 'Pay to Cashier Number' },
-  lastCycleUpdate: { type: Date, default: Date.now }
+  lastCycleUpdate: { type: Date, default: Date.now },
+  adminPhone: { type: String },
+  depositChargePercentage: { type: Number, default: 0 },
+  cycleDuration: { type: Number, default: 30 },
+  sharePrice: { type: Number, default: 100 },
+  payoutPercentage: { type: Number, default: 80 },
 }, { timestamps: true });
 
 export default mongoose.model<ISystemConfig>('SystemConfig', SystemConfigSchema);

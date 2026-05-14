@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { motion, AnimatePresence } from 'motion/react';
-import { User, Mail, Lock, Phone, ArrowRight, Loader2, Gift, Zap, AlertCircle }
+import { motion } from 'motion/react';
+import { User, Mail, Lock, Phone, ArrowRight, Loader2, Gift, Zap, AlertCircle } from 'lucide-react';
 import { apiFetch } from '../lib/api';
 
 const Register: React.FC = () => {
@@ -346,8 +346,9 @@ This agreement shall serve as digital evidence of acceptance upon registration a
             src="https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=2071" 
             alt="Growth" 
             className="w-full h-full object-cover mix-blend-overlay opacity-50"
-            referrerPolicy="no-referrer"
-          / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
+referrerPolicy="no-referrer"
+             onError={(e) => { e.currentTarget.style.display = 'none'; }}
+           />
         </div>
         
         <div className="relative z-10 text-white max-w-lg">
@@ -576,7 +577,7 @@ This agreement shall serve as digital evidence of acceptance upon registration a
       </div>
 
       {/* Terms Modal */}
-      <AnimatePresence>
+      <>
         {showTerms && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
             <motion.div
@@ -622,7 +623,7 @@ This agreement shall serve as digital evidence of acceptance upon registration a
             </motion.div>
           </div>
         )}
-      </AnimatePresence>
+      </>
     </div>
   );
 };

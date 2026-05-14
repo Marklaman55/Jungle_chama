@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'motion/react';
-import { Mail, Lock, ArrowRight, Loader2, Sparkles, AlertCircle, CheckCircle2 }
+import { Mail, Lock, ArrowRight, Loader2, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { apiFetch } from '../lib/api';
 
 const Login: React.FC = () => {
@@ -125,8 +125,9 @@ const Login: React.FC = () => {
             src="https://images.unsplash.com/photo-1553729459-efe14ef6055d?auto=format&fit=crop&q=80&w=2070" 
             alt="Savings" 
             className="w-full h-full object-cover mix-blend-overlay opacity-50"
-            referrerPolicy="no-referrer"
-          / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
+referrerPolicy="no-referrer"
+             onError={(e) => { e.currentTarget.style.display = 'none'; }}
+           />
         </div>
         
         <div className="relative z-10 text-white max-w-lg">

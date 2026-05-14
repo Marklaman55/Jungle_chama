@@ -16,6 +16,9 @@ export interface IUser extends Document {
   avatar_url?: string;
   referredBy?: string;
   createdAt: Date;
+  totalDeposited?: number;
+  totalWithdrawn?: number;
+  cyclesCompleted?: number;
 }
 
 const UserSchema: Schema = new Schema({
@@ -34,6 +37,9 @@ const UserSchema: Schema = new Schema({
   avatar_url: { type: String },
   referredBy: { type: String },
   createdAt: { type: Date, default: Date.now },
+  totalDeposited: { type: Number, default: 0 },
+  totalWithdrawn: { type: Number, default: 0 },
+  cyclesCompleted: { type: Number, default: 0 },
 }, {
   toJSON: {
     virtuals: true,

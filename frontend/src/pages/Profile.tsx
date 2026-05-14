@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'motion/react';
-import { User, Mail, Phone, Wallet, Edit2, Check, X, Loader2 }
+import { User, Mail, Phone, Wallet, Edit2, Check, X, Loader2 } from 'lucide-react';
 import { apiFetch } from '../lib/api';
 
 const Profile: React.FC = () => {
@@ -95,7 +95,7 @@ const Profile: React.FC = () => {
               <div className="relative group">
                 <div className="w-32 h-32 bg-white/10 backdrop-blur-md rounded-3xl flex items-center justify-center border border-white/20 overflow-hidden">
                   {avatarUrl ? (
-                    <img src={avatarUrl} alt={user?.name} className="w-full h-full object-cover" / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
+                    <img src={avatarUrl} alt={user?.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                   ) : (
                     <User size={64} className="text-jungle" />
                   )}

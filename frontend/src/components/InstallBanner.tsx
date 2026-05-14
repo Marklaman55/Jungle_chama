@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { useInstall } from '../context/InstallContext';
 import { X, Download } from 'lucide-react';
 
@@ -33,7 +33,7 @@ const InstallBanner: React.FC = () => {
   if (!showInstallBanner || localStorage.getItem('install_dismissed') === 'true') return null;
 
   return (
-    <AnimatePresence>
+    <>
       <motion.div
         initial={{ opacity: 0, y: 100 }}
         animate={{ opacity: 1, y: 0 }}
@@ -61,7 +61,7 @@ const InstallBanner: React.FC = () => {
           <div className="h-full bg-jungle w-0 animate-install-progress" style={{ animationDuration: '15s' }}></div>
         </div>
       </motion.div>
-    </AnimatePresence>
+    </>
   );
 };
 
