@@ -1,5 +1,4 @@
 @tailwindcss/vite;
-@import "tailwindcss";
 
 @theme {
   --color-jungle: #29AB87;

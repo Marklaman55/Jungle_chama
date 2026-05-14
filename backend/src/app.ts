@@ -63,7 +63,32 @@ const createApp = async () => {
   // Health endpoint for Render (must be before all middleware)
   app.get('/health', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
-    res.status(200).send('{"status":"ok"}');
+    res.status(200).json({ status: 'ok', service: 'jungle-chama-backend' });
+  });
+
+  // API health endpoint (database check)
+  app.get('/api/health', async (req, res) => {
+    try {
+      const state = mongoose.connection.readyState;
+      const stateMap: Record<number, string> = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting', 99: 'uninitialized' };
+      const dbState = stateMap[state] || 'unknown';
+      const ok = state === 1;
+      res.status(ok ? 200 : 503).json({ status: ok ? 'ok' : 'degraded', database: dbState });
+    } catch (err) {
+      res.status(503).json({ status: 'error', database: 'disconnected', error: (err as Error).message });
+    }
+  });
+
+  // Keepalive endpoint to prevent Render sleep
+  app.get('/keepalive', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.status(200).json({ status: 'alive' });
+  });
+
+  // Keepalive endpoint to prevent Render sleep
+  app.get('/keepalive', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.status(200).json({ status: 'alive' });
   });
 
   app.use(cors(corsOptions));
@@ -96,13 +121,13 @@ const createApp = async () => {
   // API health endpoint (database check)
   app.get('/api/health', async (req, res) => {
     try {
-      if (mongoose.connection.readyState === 1) {
-        res.status(200).json({ status: 'ok', database: 'connected' });
-      } else {
-        res.status(503).json({ status: 'error', database: 'disconnected' });
-      }
+      const state = mongoose.connection.readyState;
+      const stateMap = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting', 99: 'uninitialized' };
+      const dbState = stateMap[state] || 'unknown';
+      const ok = state === 1;
+      res.status(ok ? 200 : 503).json({ status: ok ? 'ok' : 'degraded', database: dbState });
     } catch (err) {
-      res.status(503).json({ status: 'error', database: 'disconnected' });
+      res.status(503).json({ status: 'error', database: 'disconnected', error: (err as Error).message });
     }
   });
 

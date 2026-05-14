@@ -1,12 +1,6 @@
 {
-  "projects": [
-    {
-      "dir": "frontend",
-      "framework": "vite"
-    },
-    {
-      "dir": "backend",
-      "framework": "other"
-    }
-  ]
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/dist",
+  "installCommand": "cd frontend && npm install",
+  "framework": "vite"
 }
