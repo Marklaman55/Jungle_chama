@@ -10,9 +10,11 @@ export interface IUser extends Document {
   carryForward: number;
   expectedDaily: number;
   lastPaymentDate?: Date;
-  role: 'member' | 'admin';
+  role: 'member' | 'admin' | 'viewer' | 'contributor';
   isVerified: boolean;
   payout_number?: number;
+  avatar_url?: string;
+  referredBy?: string;
   createdAt: Date;
 }
 
@@ -26,9 +28,11 @@ const UserSchema: Schema = new Schema({
   carryForward: { type: Number, default: 0 },
   expectedDaily: { type: Number, default: 20 },
   lastPaymentDate: { type: Date },
-  role: { type: String, enum: ['member', 'admin'], default: 'member' },
+  role: { type: String, enum: ['member', 'admin', 'viewer', 'contributor'], default: 'member' },
   isVerified: { type: Boolean, default: false },
   payout_number: { type: Number },
+  avatar_url: { type: String },
+  referredBy: { type: String },
   createdAt: { type: Date, default: Date.now },
 }, {
   toJSON: {

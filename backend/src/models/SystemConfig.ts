@@ -5,6 +5,9 @@ export interface ISystemConfig extends Document {
   currentIndex: number;
   cycleDay: number;
   systemState: 'RECRUITMENT' | 'SAVING' | 'BREAK';
+  paymentNumber: string;
+  paymentType: 'Till' | 'Paybill' | 'Personal';
+  manualPaymentDetails: string;
   lastCycleUpdate: Date;
 }
 
@@ -17,6 +20,9 @@ const SystemConfigSchema: Schema = new Schema({
     enum: ['RECRUITMENT', 'SAVING', 'BREAK'], 
     default: 'RECRUITMENT' 
   },
+  paymentNumber: { type: String, default: '' },
+  paymentType: { type: String, enum: ['Till', 'Paybill', 'Personal'], default: 'Till' },
+  manualPaymentDetails: { type: String, default: 'Pay to Cashier Number' },
   lastCycleUpdate: { type: Date, default: Date.now }
 }, { timestamps: true });
 

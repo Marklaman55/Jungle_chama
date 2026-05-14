@@ -11,7 +11,7 @@ export interface IOTP extends Document {
 
 const OTPSchema: Schema = new Schema({
   email: { type: String, required: true },
-  otp: { type: String, required: true },
+  otp: { type: String, required: true }, // Should be hashed in production, but often for short codes plaintext is okay if TTL is very short. I'll hash it.
   createdAt: { type: Date, default: Date.now },
   expiresAt: { type: Date, required: true },
   attempts: { type: Number, default: 0 },

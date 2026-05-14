@@ -1,9 +1,9 @@
 import express from 'express';
-import { 
-  getUsers, 
-  getTransactions, 
-  getSystemConfig, 
-  triggerPayout, 
+import {
+  getUsers,
+  getTransactions,
+  getSystemConfig,
+  triggerPayout,
   getWhatsAppStatus,
   getProducts,
   createProduct,
@@ -15,36 +15,53 @@ import {
   buyProduct,
   updateCycleOrder,
   processCyclePayout,
+  syncCycleOrder,
+  advanceCycleManual,
   updateMemberBalance,
-  triggerMemberStkPush
+  triggerMemberStkPush,
+  approveManualDeposit,
+  approveProduct,
+  updateSystemConfig,
+  updateMember,
+  deleteMember
 } from '../controllers/AdminController.js';
 import { authMiddleware } from '../middleware/AuthMiddleware.js';
 import { roleMiddleware } from '../middleware/RoleMiddleware.js';
 
 const router = express.Router();
 
+// Unified auth for all routes
 router.use(authMiddleware);
-router.use(roleMiddleware(['admin']));
 
-router.get('/users', getUsers);
-router.get('/members', getUsers);
-router.get('/transactions', getTransactions);
-router.get('/system', getSystemConfig);
-router.get('/whatsapp-status', getWhatsAppStatus);
-router.post('/trigger-payout', triggerPayout);
-router.post('/cycle-order', updateCycleOrder);
-router.post('/process-cycle-payout', processCyclePayout);
+// Viewer can see almost everything
+router.get('/users', roleMiddleware(['admin', 'contributor', 'viewer']), getUsers);
+router.get('/members', roleMiddleware(['admin', 'contributor', 'viewer']), getUsers);
+router.get('/transactions', roleMiddleware(['admin', 'contributor', 'viewer']), getTransactions);
+router.get('/system', roleMiddleware(['admin', 'contributor', 'viewer']), getSystemConfig);
+router.get('/products', roleMiddleware(['admin', 'contributor', 'viewer']), getProducts);
+router.get('/reminders/unpaid', roleMiddleware(['admin', 'contributor', 'viewer']), getUnpaidReminders);
+router.get('/whatsapp-status', roleMiddleware(['admin', 'contributor', 'viewer']), getWhatsAppStatus);
 
-router.get('/products', getProducts);
-router.post('/products', createProduct);
-router.post('/products/buy', buyProduct);
-router.put('/products/:id', updateProduct);
-router.delete('/products/bulk', bulkDeleteProducts);
-router.delete('/products/:id', deleteProduct);
+// Contributor can process operations
+router.post('/reminders/send', roleMiddleware(['admin', 'contributor']), sendDailyReminders);
+router.post('/process-cycle-payout', roleMiddleware(['admin', 'contributor']), processCyclePayout);
+router.post('/products/buy', roleMiddleware(['admin', 'contributor']), buyProduct);
+router.post('/products/approve', roleMiddleware(['admin', 'contributor']), approveProduct);
+router.post('/transactions/approve-manual', roleMiddleware(['admin', 'contributor']), approveManualDeposit);
+router.post('/trigger-stk', roleMiddleware(['admin', 'contributor']), triggerMemberStkPush);
 
-router.get('/reminders/unpaid', getUnpaidReminders);
-router.post('/reminders/send', sendDailyReminders);
-router.post('/update-balance', updateMemberBalance);
-router.post('/trigger-stk', triggerMemberStkPush);
+// Admin only for system settings and destructive actions
+router.post('/system', roleMiddleware(['admin']), updateSystemConfig);
+router.post('/trigger-payout', roleMiddleware(['admin']), triggerPayout);
+router.post('/cycle-order', roleMiddleware(['admin']), updateCycleOrder);
+router.post('/cycle/sync', roleMiddleware(['admin']), syncCycleOrder);
+router.post('/cycle/advance', roleMiddleware(['admin']), advanceCycleManual);
+router.post('/products', roleMiddleware(['admin']), createProduct);
+router.put('/products/:id', roleMiddleware(['admin']), updateProduct);
+router.post('/products/bulk', roleMiddleware(['admin']), bulkDeleteProducts);
+router.delete('/products/:id', roleMiddleware(['admin']), deleteProduct);
+router.post('/update-balance', roleMiddleware(['admin']), updateMemberBalance);
+router.put('/members/:id', roleMiddleware(['admin']), updateMember);
+router.delete('/members/:id', roleMiddleware(['admin']), deleteMember);
 
 export default router;

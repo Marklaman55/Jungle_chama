@@ -1,9 +1,10 @@
-import { Router, Request, Response } from 'express';
+import express from 'express';
 
-const router = Router();
+const router = express.Router();
 
-router.post('/chat', (req: Request, res: Response) => {
-  res.status(501).json({ error: 'AI chat endpoint not yet implemented' });
+router.post('/chat', async (req, res) => {
+    // Placeholder for AI chat features
+    res.json({ message: "AI Features coming soon!" });
 });
 
 export default router;

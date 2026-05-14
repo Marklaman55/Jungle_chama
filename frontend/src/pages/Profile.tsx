@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'motion/react';
-import { User, Mail, Phone, Wallet, Edit2, Check, X, Loader2 } from 'lucide-react';
-import { apiFetch } from '../lib/api';
+import { User, Mail, Phone, Wallet, Edit2, Check, X, Loader2 }
+import { apiFetch } from '../lib/api';;
 
 const Profile: React.FC = () => {
   const { user, setUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
+  const [avatarUrl, setAvatarUrl] = useState((user as any)?.avatar_url || '');
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -26,7 +28,7 @@ const Profile: React.FC = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ name, phone }),
+        body: JSON.stringify({ name, phone, avatar_url: avatarUrl }),
       });
 
       const data = await response.json();
@@ -48,6 +50,36 @@ const Profile: React.FC = () => {
     }
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingAvatar(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await apiFetch('/api/admin/upload', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        body: formData
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setAvatarUrl(data.url);
+        setSuccess('Avatar uploaded! Don\'t forget to save changes.');
+      } else {
+        throw new Error('Upload failed');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to upload avatar.');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pt-32 pb-12">
       <div className="max-w-3xl mx-auto px-4">
@@ -60,8 +92,35 @@ const Profile: React.FC = () => {
           <div className="bg-black p-12 text-white relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-jungle/20 rounded-full blur-3xl -mr-32 -mt-32"></div>
             <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-              <div className="w-32 h-32 bg-white/10 backdrop-blur-md rounded-3xl flex items-center justify-center border border-white/20">
-                <User size={64} className="text-jungle" />
+              <div className="relative group">
+                <div className="w-32 h-32 bg-white/10 backdrop-blur-md rounded-3xl flex items-center justify-center border border-white/20 overflow-hidden">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt={user?.name} className="w-full h-full object-cover" / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
+                  ) : (
+                    <User size={64} className="text-jungle" />
+                  )}
+                </div>
+                {isEditing && (
+                  <>
+                    <input
+                      type="file"
+                      id="avatar-upload"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                    />
+                    <label
+                      htmlFor="avatar-upload"
+                      className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                    >
+                      {uploadingAvatar ? (
+                        <Loader2 className="animate-spin text-white" />
+                      ) : (
+                        <Edit2 className="text-white" size={24} />
+                      )}
+                    </label>
+                  </>
+                )}
               </div>
               <div className="text-center md:text-left flex-1">
                 <h1 className="text-4xl font-black tracking-tight mb-2 uppercase">{user?.name}</h1>

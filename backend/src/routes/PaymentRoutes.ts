@@ -1,11 +1,5 @@
 import express from 'express';
-import { 
-    triggerStkPush, 
-    handleMpesaCallback, 
-    processB2BPayout, 
-    handleB2BResult, 
-    handleB2BTimeout 
-} from '../controllers/PaymentController.js';
+import { triggerStkPush, handleMpesaCallback, processB2BPayout, handleB2BResult, handleB2BTimeout } from '../controllers/PaymentController.js';
 import { authMiddleware } from '../middleware/AuthMiddleware.js';
 
 const router = express.Router();

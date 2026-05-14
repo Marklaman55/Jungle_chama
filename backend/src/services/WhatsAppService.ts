@@ -13,7 +13,7 @@ const client = new Client({
     }),
     puppeteer: {
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    },
+    }
 });
 
 client.on('qr', (qr) => {
@@ -48,6 +48,8 @@ export const initWhatsApp = async () => {
     } catch (error: any) {
         if (error.message && error.message.includes('The browser is already running')) {
             console.warn('WhatsApp browser already running. Attempting to recover...');
+            // In some cases we might just want to wait or log it.
+            // On AI Studio restarts, this can happen if the previous process is still cleaning up.
         } else {
             console.error('Failed to initialize WhatsApp:', error);
         }
@@ -64,6 +66,7 @@ export const sendWhatsAppMessage = async (phone: string, message: string) => {
             console.log('WhatsApp client not ready');
             return;
         }
+        // Format phone: remove + and add @c.us
         const formattedPhone = phone.replace('+', '').replace('whatsapp:', '') + '@c.us';
         await client.sendMessage(formattedPhone, message);
         console.log(`Message sent to ${phone}`);

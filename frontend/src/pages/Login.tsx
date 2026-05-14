@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'motion/react';
-import { Mail, Lock, ArrowRight, Loader2, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { apiFetch } from '../lib/api';
+import { Mail, Lock, ArrowRight, Loader2, Sparkles, AlertCircle, CheckCircle2 }
+import { apiFetch } from '../lib/api';;
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -121,14 +121,12 @@ const Login: React.FC = () => {
       <div className="hidden lg:flex lg:w-1/2 bg-black relative items-center justify-center p-20 overflow-hidden">
         <div className="absolute inset-0 opacity-40">
           <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-jungle/40 via-transparent to-transparent" />
-<img
-             src="https://images.unsplash.com/photo-1553729459-efe14ef6055d?auto=format&fit=crop&q=80&w=2070"
-             alt="Savings"
-             className="w-full h-full object-cover mix-blend-overlay opacity-50"
-             referrerPolicy="no-referrer"
-             loading="lazy"
-             onError={(e) => { e.currentTarget.style.display = 'none'; }}
-           />
+          <img 
+            src="https://images.unsplash.com/photo-1553729459-efe14ef6055d?auto=format&fit=crop&q=80&w=2070" 
+            alt="Savings" 
+            className="w-full h-full object-cover mix-blend-overlay opacity-50"
+            referrerPolicy="no-referrer"
+          / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
         </div>
         
         <div className="relative z-10 text-white max-w-lg">

@@ -3,10 +3,10 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import OTP from '../models/OTP.js';
-import { sendOTPEmail, sendWelcomeEmail } from '../services/EmailService.js';
-import { sendWhatsAppMessage } from '../services/WhatsAppService.js';
+import { sendVerificationOTP, sendWelcomeNotifications } from '../services/NotificationService.js';
 import { v4 as uuidv4 } from 'uuid';
-import { config } from '../config/env.js';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
 
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -27,13 +27,13 @@ export const login = async (req: Request, res: Response) => {
     }
 
     const token = jwt.sign(
-      { id: user._id, userId: user.userId, email: user.email, role: user.role }, 
-      config.jwtSecret, 
+      { id: user._id, userId: user.userId, email: user.email, role: user.role },
+      JWT_SECRET,
       { expiresIn: '1d' }
     );
 
-    res.json({ 
-      message: 'Login successful', 
+    res.json({
+      message: 'Login successful',
       token,
       user: {
         name: user.name,
@@ -83,7 +83,9 @@ export const verifyOtp = async (req: Request, res: Response) => {
     user.isVerified = true;
     await user.save();
 
-    const token = jwt.sign({ id: user._id, userId: user.userId, email: user.email, role: user.role }, config.jwtSecret, { expiresIn: '1d' });
+    await sendWelcomeNotifications(user.email, user.phone, user.name);
+
+    const token = jwt.sign({ id: user._id, userId: user.userId, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
 
     res.json({
       message: 'Login successful',
@@ -102,39 +104,47 @@ export const verifyOtp = async (req: Request, res: Response) => {
 };
 
 export const register = async (req: Request, res: Response) => {
-    const { name, email, password, phone } = req.body;
-    try {
-        const existingUser = await User.findOne({ email });
-        if (existingUser) return res.status(400).json({ error: 'Email already registered.' });
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const userId = uuidv4().slice(0, 8).toUpperCase();
-
-        const user = new User({
-            name,
-            email,
-            password: hashedPassword,
-            phone,
-            userId,
-        });
-
-        await user.save();
-
-        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-        const hashedOtp = await bcrypt.hash(otpCode, 10);
-        const expiresAt = new Date(Date.now() + 10 * 60000);
-        await new OTP({ email, otp: hashedOtp, expiresAt }).save();
-
-        if (phone) {
-          await sendWhatsAppMessage(phone, `Welcome to Jungle Chama! Your verification code is: ${otpCode}`);
-        }
-
-        await sendWelcomeEmail(email, name);
-
-        res.status(201).json({ message: 'Registration initiated. Please verify your phone number.', email });
-    } catch (error: any) {
-        res.status(500).json({ error: error.message });
+  const { name, email, password, phone, termsAccepted, referredBy } = req.body;
+  try {
+    let normalizedEmail = email.toLowerCase().trim();
+    if (normalizedEmail.endsWith('@gmail.com')) {
+      const [localPart] = normalizedEmail.split('@');
+      const basePart = localPart.split('+')[0].replace(/\./g, '');
+      normalizedEmail = `${basePart}@gmail.com`;
     }
+
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) return res.status(400).json({ error: 'This Gmail address is already associated with an account. Registration blocked to prevent duplicates.' });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const userId = uuidv4().slice(0, 8).toUpperCase();
+
+    const user = new User({
+        name,
+        email: normalizedEmail,
+        password: hashedPassword,
+        phone,
+        userId,
+        referredBy,
+        termsAccepted: !!termsAccepted,
+        termsAcceptedAt: termsAccepted ? new Date() : undefined
+    });
+
+    await user.save();
+
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const hashedOtp = await bcrypt.hash(otpCode, 10);
+    const expiresAt = new Date(Date.now() + 10 * 60000);
+    await new OTP({ email, otp: hashedOtp, expiresAt }).save();
+
+    if (phone) {
+      await sendVerificationOTP(email, phone, otpCode);
+    }
+
+    res.status(201).json({ message: 'Registration initiated. Please verify your phone number.', email });
+  } catch (error: any) {
+      res.status(500).json({ error: error.message });
+  }
 };
 
 export const forgotPassword = async (req: Request, res: Response) => {
@@ -152,9 +162,9 @@ export const forgotPassword = async (req: Request, res: Response) => {
     const expiresAt = new Date(Date.now() + 10 * 60000);
     await OTP.deleteMany({ email });
     await new OTP({ email, otp: hashedOtp, expiresAt }).save();
-  
+
     if (user.phone) {
-      await sendWhatsAppMessage(user.phone, `Your Jungle Chama password reset code is: ${otpCode}. Valid for 10 minutes.`);
+      await sendVerificationOTP(user.email, user.phone, otpCode);
     }
 
     res.json({ message: 'Password reset code sent to your email.' });
