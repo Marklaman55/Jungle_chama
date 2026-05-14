@@ -1,14 +1,12 @@
 import axios from 'axios';
-import dotenv from 'dotenv';
+import { config } from '../config/env.js';
 
-dotenv.config();
-
-const consumerKey = process.env.MPESA_CONSUMER_KEY;
-const consumerSecret = process.env.MPESA_CONSUMER_SECRET;
-const shortcode = process.env.MPESA_SHORTCODE;
-const passkey = process.env.MPESA_PASSKEY;
-const baseUrl = process.env.BASE_URL;
-const callbackUrlEnv = process.env.MPESA_CALLBACK_URL;
+const consumerKey = config.mpesa.consumerKey;
+const consumerSecret = config.mpesa.consumerSecret;
+const shortcode = config.mpesa.shortcode;
+const passkey = config.mpesa.passkey;
+const baseUrl = config.baseUrl;
+const callbackUrlEnv = config.mpesa.callbackUrl;
 
 export const getAccessToken = async () => {
     const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64');
@@ -53,7 +51,7 @@ export const initiateStkPush = async (phone: string, amount: number, accountRefe
     const formattedPhone = formatPhone(phone);
 
 // Prioritize MPESA_CALLBACK_URL from env, but validate it's not for a different AI Studio deployment
-    let finalCallbackUrl = callbackUrlEnv;
+    let finalCallbackUrl: string | undefined = callbackUrlEnv;
 
     // If the callback URL is from a different AI Studio environment, we likely want to auto-detect instead
     if (finalCallbackUrl && finalCallbackUrl.includes('run.app') && baseUrlOverride && !finalCallbackUrl.includes(baseUrlOverride.split('//')[1].split('.')[0])) {
@@ -130,8 +128,8 @@ export const initiateB2BPayout = async (phone: string, amount: number, remarks: 
     // For Sandbox B2C: https://sandbox.safaricom.co.ke/mpesa/b2c/v1/paymentrequest
     
     const data = {
-        InitiatorName: process.env.MPESA_INITIATOR_NAME || "testapi", 
-        SecurityCredential: process.env.MPESA_SECURITY_CREDENTIAL || "your_encoded_credential",
+        InitiatorName: config.mpesa.initiatorName || "testapi", 
+        SecurityCredential: config.mpesa.securityCredential || "your_encoded_credential",
         CommandID: "BusinessPayment",
         Amount: amount,
         PartyA: shortcode,

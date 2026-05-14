@@ -1,18 +1,25 @@
 import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
 import { config } from '../config/env.js';
 
-dotenv.config();
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: config.email.user,
-    pass: config.email.pass,
-  },
-});
+// Lazy transporter creation — avoids crash on bad/missing credentials at import time
+const getTransporter = () => {
+  if (!config.email.user || !config.email.pass) {
+    console.warn('[EmailService] Email credentials not configured. Emails will be skipped.');
+    return null;
+  }
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: config.email.user,
+      pass: config.email.pass,
+    },
+  });
+};
 
 export const sendOTPEmail = async (email: string, otp: string) => {
+  const transporter = getTransporter();
+  if (!transporter) return;
+
   const mailOptions = {
     from: `"Jungle Chama" <${config.email.user}>`,
     to: email,
@@ -37,6 +44,9 @@ export const sendOTPEmail = async (email: string, otp: string) => {
 };
 
 export const sendResetEmail = async (email: string, otp: string) => {
+  const transporter = getTransporter();
+  if (!transporter) return;
+
   const mailOptions = {
     from: `"Jungle Chama" <${config.email.user}>`,
     to: email,
@@ -60,6 +70,9 @@ export const sendResetEmail = async (email: string, otp: string) => {
 };
 
 export const sendWelcomeEmail = async (email: string, name: string) => {
+  const transporter = getTransporter();
+  if (!transporter) return;
+
   const mailOptions = {
     from: `"Jungle Chama" <${config.email.user}>`,
     to: email,

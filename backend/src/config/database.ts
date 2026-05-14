@@ -1,9 +1,7 @@
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
+import { config } from './env.js';
 
-dotenv.config();
-
-const MONGO_URI = process.env.MONGO_URI;
+const MONGO_URI = config.mongoUri;
 const FALLBACK_URI = 'mongodb+srv://n8n_scrapper:n8n_scrapper@atlas-citrine-cable.60ngaae.mongodb.net/?appName=atlas-citrine-cable';
 
 let cachedConnection: typeof mongoose | null = null;
