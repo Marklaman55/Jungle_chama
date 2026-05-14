@@ -182,13 +182,24 @@ const Products: React.FC = () => {
                 className="bg-white rounded-[3rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_25px_60px_rgb(0,0,0,0.08)] border border-gray-50 group transition-all duration-500"
               >
                 <div className="relative h-80 overflow-hidden">
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    referrerPolicy="no-referrer"
-                  />
+<img
+                     src={product.image_url}
+                     alt={product.name}
+                     loading="lazy"
+                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                     referrerPolicy="no-referrer"
+                     onError={(e) => {
+                       e.currentTarget.style.display = 'none';
+                       const parent = e.currentTarget.parentElement;
+                       if (parent) {
+                         const fallback = parent.querySelector('.product-fallback');
+                         if (fallback) fallback.classList.remove('hidden');
+                       }
+                     }}
+                   />
+                   <div className={`product-fallback w-full h-full flex items-center justify-center text-gray-300 ${product.image_url ? 'hidden' : ''}`}>
+                     {product.name?.charAt(0)?.toUpperCase()}
+                   </div>
                   <div className="absolute top-8 right-8 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-2xl font-black text-black shadow-xl border border-white/20 tracking-tight">
                     KES {product.price}
                   </div>
