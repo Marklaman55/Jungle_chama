@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LayoutDashboard, ShoppingBag, User, LogOut, ShieldCheck, Menu, X, ShoppingCart } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { useCart } from '../context/CartContext';
 
 const Navbar: React.FC = () => {
@@ -108,7 +108,7 @@ const Navbar: React.FC = () => {
       </div>
 
       {/* Mobile menu */}
-      <AnimatePresence>
+      <>
         {isMenuOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
@@ -160,7 +160,7 @@ const Navbar: React.FC = () => {
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </>
     </nav>
   );
 };

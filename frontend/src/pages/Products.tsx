@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { ShoppingBag, ArrowRight, Loader2, Package, CheckCircle2, AlertCircle, ShoppingCart } from 'lucide-react';
 import { apiFetch } from '../lib/api';
 
@@ -21,7 +21,7 @@ const Products: React.FC = () => {
       const headers = { Authorization: `Bearer ${token}` };
 
 // Fetch products
-       const productsRes = await apiapiFetch('/api/products', { headers });
+       const productsRes = await apiFetch('/api/products', { headers });
       if (!productsRes.ok) {
         throw new Error(`HTTP error! status: ${productsRes.status}`);
       }
@@ -37,7 +37,7 @@ const Products: React.FC = () => {
 
       // Fetch pending payout order
       if (user) {
-        const payoutRes = await apiapiFetch('/api/member/payout-orders/pending', { headers });
+        const payoutRes = await apiFetch('/api/member/payout-orders/pending', { headers });
         const payoutData = await payoutRes.json();
         if (payoutRes.ok && payoutData.length > 0) {
           setPayoutOrder(payoutData[0]);
@@ -61,7 +61,7 @@ const Products: React.FC = () => {
     setRedeeming(true);
     try {
       const token = await getToken();
-      const res = await apiapiFetch('/api/member/process-payout', {
+      const res = await apiFetch('/api/member/process-payout', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -94,7 +94,7 @@ const Products: React.FC = () => {
     setBuying(productId);
     try {
       const token = await getToken();
-      const res = await apiapiFetch('/api/admin/products/buy', {
+      const res = await apiFetch('/api/admin/products/buy', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -183,7 +183,7 @@ const Products: React.FC = () => {
             </p>
           </motion.div>
 
-          <AnimatePresence>
+          <>
             {payoutOrder && (
               <motion.div 
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -201,9 +201,9 @@ const Products: React.FC = () => {
                 </div>
               </motion.div>
             )}
-          </AnimatePresence>
+          </>
 
-          <AnimatePresence>
+          <>
             {notification && (
               <motion.div
                 initial={{ opacity: 0, y: -20, scale: 0.95 }}
@@ -217,7 +217,7 @@ const Products: React.FC = () => {
                 {notification.message}
               </motion.div>
             )}
-          </AnimatePresence>
+          </>
         </div>
 
         {loading ? (
@@ -265,12 +265,14 @@ const Products: React.FC = () => {
                   }}
                 >
                   {(product.image_url || (product.media?.length > 0 && product.media[0].type === 'image')) ? (
-                    <img                       src={product.image_url || product.media.find((m: any) = onError={(e) => { e.currentTarget.style.display = `"none`"; }}> m.type === 'image')?.url}
-                      alt={product.name}
-                      loading="lazy"
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      referrerPolicy="no-referrer-when-downgrade"
-                    />
+<img
+                       src={product.image_url || product.media.find((m: any) => m.type === 'image')?.url}
+                       alt={product.name}
+                       loading="lazy"
+                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                       referrerPolicy="no-referrer-when-downgrade"
+                       onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                     />
                   ) : (
                     <div className="flex flex-col items-center gap-3 p-12 text-center">
                       <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-inner mb-2">
@@ -427,7 +429,7 @@ const Products: React.FC = () => {
       </div>
 
       {/* Product Details Modal */}
-      <AnimatePresence>
+      <>
         {showProductDetails && selectedProduct && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -445,11 +447,12 @@ const Products: React.FC = () => {
                 {selectedProduct.media && selectedProduct.media.length > 0 ? (
                   <div className="w-full h-full relative group">
                     {selectedProduct.media[activeMediaIndex].type === 'image' ? (
-                      <img 
-                        src={selectedProduct.media[activeMediaIndex].url} 
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
-                        alt={selectedProduct.name} 
-                      / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
+<img
+                         src={selectedProduct.media[activeMediaIndex].url}
+                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                         alt={selectedProduct.name}
+                         onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                       />
                     ) : (
                       <div className="relative w-full h-full">
                         <video 
@@ -486,11 +489,12 @@ const Products: React.FC = () => {
                         poster={selectedProduct.image_url}
                       />
                     ) : (
-                      <img 
-                        src={selectedProduct.image_url} 
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
-                        alt={selectedProduct.name}
-                      / onError={(e) => { e.currentTarget.style.display = `"none`"; }}>
+<img
+                         src={selectedProduct.image_url}
+                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                         alt={selectedProduct.name}
+                         onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                       />
                     )}
                   </div>
                 )}
@@ -596,7 +600,7 @@ const Products: React.FC = () => {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </>
     </div>
   );
 };

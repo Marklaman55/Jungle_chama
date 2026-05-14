@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { InstallProvider } from './context/InstallContext';
+import { Loader2 } from 'lucide-react';
 import Navbar from './components/Navbar';
 import InstallBanner from './components/InstallBanner';
 import Home from './pages/Home';
