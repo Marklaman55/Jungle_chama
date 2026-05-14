@@ -1,29 +1,16 @@
+import 'dotenv/config';
 import createApp from './app.js';
-import mongoose from 'mongoose';
 import User from './models/User.js';
 import SystemConfig from './models/SystemConfig.js';
-import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
+import bcrypt from 'bcrypt';
 
 const startServer = async () => {
   const app = await createApp();
   const PORT = process.env.PORT || 3000;
 
-  // Health endpoint for Render
-  app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok' });
-  });
-
-  app.get('/api/health', async (req, res) => {
-    try {
-      await mongoose.connection.db.admin().ping();
-      res.status(200).json({ status: 'ok', database: 'connected' });
-    } catch (err) {
-      res.status(503).json({ status: 'error', database: 'disconnected' });
-    }
-  });
-
   try {
+    // Bootstrap Admin User if not exists
     const adminExists = await User.findOne({ role: 'admin' });
     if (!adminExists) {
       const hashedPassword = await bcrypt.hash('Admin@Jungle2024', 10);
@@ -40,6 +27,13 @@ const startServer = async () => {
       console.log('Default admin user created: admin@junglechama.com / Admin@Jungle2024');
     }
 
+    // Also ensure the current user is an admin for convenience
+    await User.findOneAndUpdate(
+      { email: 'vincentkamau179@gmail.com' },
+      { role: 'admin' }
+    );
+
+    // Initialize SystemConfig if it doesn't exist
     const config = await SystemConfig.findOne();
     if (!config) {
       await new SystemConfig({

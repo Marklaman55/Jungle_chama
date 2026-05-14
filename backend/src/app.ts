@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs';
 import multer from 'multer';
+import mongoose from 'mongoose';
 import { connectDatabase } from './config/database.js';
 import { corsOptions } from './config/cors.js';
 import { errorMiddleware } from './middleware/ErrorMiddleware.js';
@@ -12,24 +13,41 @@ import AdminRoutes from './routes/AdminRoutes.js';
 import MemberRoutes from './routes/MemberRoutes.js';
 import PaymentRoutes from './routes/PaymentRoutes.js';
 import WebhookRoutes from './routes/WebhookRoutes.js';
+import AIRoutes from './routes/AIRoutes.js';
 import { startCron } from './cron/DailyCron.js';
+import { initWhatsApp } from './services/WhatsAppService.js';
+import { getProducts } from './controllers/AdminController.js';
+import { getMyPayments } from './controllers/MemberController.js';
+import { authMiddleware } from './middleware/AuthMiddleware.js';
+import cloudinary from 'cloudinary';
+
+// Configure Cloudinary
+if (process.env.CLOUDINARY_CLOUD_NAME) {
+  cloudinary.v2.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY || '',
+    api_secret: process.env.CLOUDINARY_API_SECRET || '',
+  });
+}
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
+// Multer Storage Configuration (Memory storage for Cloudinary)
 const storage = multer.memoryStorage();
-const upload = multer({ 
+const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req: any, file: any, cb: any) => {
-    if (file.mimetype.startsWith('image/')) {
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
       cb(null, true);
     } else {
-      cb(new Error('Only images are allowed'));
+      cb(new Error('Only images and videos are allowed'));
     }
   }
 });
@@ -37,8 +55,20 @@ const upload = multer({
 const createApp = async () => {
   const app = express();
 
+  // Health endpoint for Render (MUST be before ALL middleware — never touches DB)
+  app.get('/health', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.status(200).json({ status: 'ok', service: 'jungle-chama-backend' });
+  });
+
+  // Keepalive endpoint to prevent Render sleep
+  app.get('/keepalive', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.status(200).json({ status: 'alive' });
+  });
+
   app.use(cors(corsOptions));
-  
+
   app.use((req, res, next) => {
     res.setHeader('X-Frame-Options', 'SAMEORIGIN');
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -50,40 +80,102 @@ const createApp = async () => {
   app.use(express.urlencoded({ extended: true }));
   app.use('/uploads', express.static(uploadsDir));
 
-  await connectDatabase();
+  // Connect to MongoDB (NON-BLOCKING — never crashes the server)
+  connectDatabase().catch(err => {
+    console.warn('MongoDB connection warning (will retry on first request):', err.message);
+  });
 
-  startCron();
-
-  if (process.env.ENABLE_WHATSAPP !== 'false') {
+  // Initialize WhatsApp if enabled (NON-BLOCKING)
+  if (process.env.ENABLE_WHATSAPP === 'true') {
     try {
-      const { initWhatsApp } = await import('./services/WhatsAppService.js');
       await initWhatsApp();
     } catch (err) {
       console.warn('WhatsApp service disabled or unavailable in this environment');
     }
   }
 
+  // Start cron (NON-BLOCKING)
+  startCron();
+
   // API health endpoint (database check)
   app.get('/api/health', async (req, res) => {
     try {
-      const mongoose = await import('mongoose');
-      await mongoose.connection.db.admin().ping();
-      res.status(200).json({ status: 'ok', database: 'connected' });
+      const state = mongoose.connection.readyState;
+      const stateMap: Record<number, string> = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting', 99: 'uninitialized' };
+      const dbState = stateMap[state] || 'unknown';
+      const ok = state === 1;
+      res.status(ok ? 200 : 503).json({ status: ok ? 'ok' : 'degraded', database: dbState });
     } catch (err) {
-      res.status(503).json({ status: 'error', database: 'disconnected' });
+      res.status(503).json({ status: 'error', database: 'disconnected', error: (err as Error).message });
     }
   });
 
+  // Database guard middleware — returns 503 if DB is not connected
+  app.use('/api', async (req, res, next) => {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ status: 'error', database: 'disconnected' });
+    }
+    next();
+  });
+
+  // API request logger
+  app.use('/api/*', (req, res, next) => {
+    console.log(`[API Request] ${req.method} ${req.url}`);
+    next();
+  });
+
+  // API Routes
   app.use('/api/auth', AuthRoutes);
   app.use('/api/member', MemberRoutes);
   app.use('/api/admin', AdminRoutes);
   app.use('/api/payment/mpesa', PaymentRoutes);
   app.use('/api/mpesa', PaymentRoutes);
   app.use('/api/webhook', WebhookRoutes);
+  app.use('/api/ai', AIRoutes);
 
-  app.use('/api/*', (req, res) => {
+  // Top-level public routes (no auth required)
+  app.get('/api/products', getProducts);
+  app.get('/api/payments/my', authMiddleware, getMyPayments);
+
+  // Image/Video Upload Route — uploads to Cloudinary
+  app.post('/api/admin/upload', authMiddleware, upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+      }
+
+      const streamUpload = (req: any) => {
+        return new Promise((resolve, reject) => {
+          const stream = cloudinary.v2.uploader.upload_stream(
+            { resource_type: 'auto' },
+            (error, result) => {
+              if (result) {
+                resolve(result);
+              } else {
+                reject(error);
+              }
+            }
+          );
+          stream.end(req.file.buffer);
+        });
+      };
+
+      const result: { secure_url?: string; resource_type?: string } = await streamUpload(req);
+      res.json({ url: result.secure_url, resource_type: result.resource_type });
+    } catch (error) {
+      console.error('Cloudinary Upload Error:', error);
+      res.status(500).json({ error: error.message || 'Failed to upload to Cloudinary' });
+    }
+  });
+
+  // Fallback for non-existent API routes
+  app.all('/api/*', (req, res) => {
     console.warn(`[API 404] ${req.method} ${req.url}`);
-    res.status(404).json({ error: 'API route not found' });
+    res.status(404).json({
+      error: 'API route not found',
+      method: req.method,
+      path: req.originalUrl
+    });
   });
 
   app.use(errorMiddleware);
