@@ -121,7 +121,7 @@ const Home: React.FC = () => {
             <div className="w-8 h-8 bg-jungle rounded-lg flex items-center justify-center text-white font-bold">J</div>
             <span className="text-xl font-bold tracking-tight">Jungle<span className="text-jungle">Chama</span></span>
           </div>
-          <p className="text-gray-400 text-sm mb-8">© 2024 Jungle Chama System. Built for the next generation.</p>
+          <p className="text-gray-400 text-sm mb-8">© 2026 Jungle Chama System. Built for the next generation.</p>
           <div className="flex justify-center gap-6">
             <a href="#" className="text-gray-400 hover:text-jungle transition-colors">Terms</a>
             <a href="#" className="text-gray-400 hover:text-jungle transition-colors">Privacy</a>
