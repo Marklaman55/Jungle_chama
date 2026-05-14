@@ -19,10 +19,22 @@
     <meta property="twitter:title" content="Jungle Chama | Modern Savings for Tribes" />
     <meta property="twitter:description" content="Connect with your tribe and grow your savings on WhatsApp." />
 
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+     <link rel="manifest" href="/manifest.json" />
+     <meta name="theme-color" content="#29AB87" />
+     <link rel="apple-touch-icon" href="/icon-192x192.png" />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<div id="root"></div>
+     <script type="module" src="/src/main.tsx"></script>
+     <script>
+       if ('serviceWorker' in navigator) {
+         window.addEventListener('load', () => {
+           navigator.serviceWorker.register('/sw.js')
+             .then(reg => console.log('SW Registered', reg))
+             .catch(err => console.error('SW Error', err));
+         });
+       }
+     </script>
+   </body>
 </html>

@@ -138,28 +138,31 @@ const Home: React.FC = () => {
                   to="/products"
                   className="group bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden hover:shadow-[0_40px_80px_rgba(0,0,0,0.06)] transition-all duration-700 flex flex-col h-full"
                 >
-                  <div className="aspect-square bg-gray-50 relative overflow-hidden flex items-center justify-center">
-                    {product.image_url ? (
-<img
-                         src={product.image_url}
+<div className="aspect-square bg-gray-100 relative overflow-hidden flex items-center justify-center">
+                     {(product.image_url || (product.media?.length > 0 && product.media[0].type === 'image')) ? (
+                       <img
+                         src={product.image_url || product.media.find((m: any) => m.type === 'image')?.url}
                          alt={product.name}
                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                         referrerPolicy="no-referrer"
+                         referrerPolicy="no-referrer-when-downgrade"
                          loading="lazy"
                          onError={(e) => {
                            e.currentTarget.style.display = 'none';
                            e.currentTarget.parentElement?.querySelector('.home-prod-fallback')?.classList.remove('hidden');
                          }}
                        />
-                       <div className={`home-prod-fallback w-full h-full flex items-center justify-center text-gray-300 ${product.image_url ? 'hidden' : ''}`}>
-                         {product.name.charAt(0)}
+                     ) : (
+                       <div className="flex flex-col items-center gap-3 p-8 text-center">
+                         <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-inner mb-2">
+                           <Package size={32} className="text-gray-200" />
+                         </div>
+                         <span className="text-gray-300 text-3xl font-black uppercase tracking-tighter opacity-40">{product.name.charAt(0)}</span>
+                         <p className="text-[8px] font-black text-gray-300 uppercase tracking-widest">Image Coming Soon</p>
                        </div>
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-100 text-6xl font-black uppercase tracking-tighter">{product.name.charAt(0)}</div>
-                    )}
-                    <div className="absolute top-6 right-6 px-4 py-2 bg-white/90 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase tracking-widest text-black shadow-xl border border-white/20">
-                      KES {product.price}
-                    </div>
+                     )}
+                     <div className="absolute top-6 right-6 px-4 py-2 bg-black/80 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase tracking-widest text-white shadow-xl border border-white/10">
+                       KES {product.price}
+                     </div>
                   </div>
                   <div className="p-8 flex flex-col flex-1">
                     <h3 className="text-xl font-black text-black mb-2 tracking-tight line-clamp-1 uppercase group-hover:text-jungle transition-colors">{product.name}</h3>
