@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+@tailwindcss/vite;
 @import "tailwindcss";
 
 @theme {
@@ -20,7 +20,16 @@
 }
 
 .atmosphere-gradient {
-  background: 
+  background:
     radial-gradient(circle at 50% 30%, rgba(41, 171, 135, 0.05) 0%, transparent 60%),
     radial-gradient(circle at 10% 80%, rgba(41, 171, 135, 0.08) 0%, transparent 50%);
+}
+
+@keyframes install-progress {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+.animate-install-progress {
+  animation: install-progress 15s linear forwards;
 }
